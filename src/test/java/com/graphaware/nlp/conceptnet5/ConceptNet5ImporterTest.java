@@ -32,8 +32,9 @@ public class ConceptNet5ImporterTest {
     @Test
     public void testImportHierarchy() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
-        Tag source = textProcessor.annotateTag("bad");
+        //ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
+        ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor).build();
+        Tag source = textProcessor.annotateTag("red");
         List<Tag> result = instance.importHierarchy(source, "en");
         List<Tag> expResult = null;
         //assertEquals(expResult, result);

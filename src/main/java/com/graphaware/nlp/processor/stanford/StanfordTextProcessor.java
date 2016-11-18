@@ -46,6 +46,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -382,6 +383,22 @@ public class StanfordTextProcessor implements TextProcessor {
             children.stream().forEach((child) -> {
                 result.addAll(inspectSubTree(child));
             });
+        }
+        return result;
+    }
+
+    @Override
+    public List<Tag> annotateTags(String text) {
+        List<Tag> result = new ArrayList<>();
+        Annotation document = new Annotation(text);
+        pipelines.get(TOKENIZER).annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        Optional<CoreMap> sentence = sentences.stream().findFirst();
+        if (sentence.isPresent()) {
+            Stream<Tag> oTags = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
+                    .map((token) -> getTag(token))
+                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()));
+            oTags.forEach((tag) -> result.add(tag));
         }
         return result;
     }
