@@ -115,7 +115,8 @@ public class StanfordTextProcessor implements TextProcessor {
         pipelines.put(PHRASE, pipeline);
     }
 
-    public AnnotatedText annotateText(String text, Object id, int level, boolean store) {
+    @Override
+    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store) {
         String pipeline;
         switch (level) {
             case 0:
@@ -130,10 +131,11 @@ public class StanfordTextProcessor implements TextProcessor {
             default:
                 pipeline = TOKENIZER;
         }
-        return annotateText(text, id, pipeline, store);
+        return annotateText(text, id, pipeline, lang, store);
     }
 
-    public AnnotatedText annotateText(String text, Object id, String name, boolean store) {
+    @Override
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store) {
         StanfordCoreNLP pipeline = pipelines.get(name);
         if (pipeline == null) {
             throw new RuntimeException("Pipeline: " + name + " doesn't exist");
@@ -149,7 +151,7 @@ public class StanfordTextProcessor implements TextProcessor {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             String sentenceId = id + "_" + sentenceNumber;
             final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
-            extractTokens(sentence, newSentence);
+            extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
             extractPhrases(sentence, newSentence);
             result.addSentence(newSentence);
@@ -174,7 +176,7 @@ public class StanfordTextProcessor implements TextProcessor {
         newSentence.setSentiment(score);
     }
 
-    protected void extractTokens(CoreMap sentence, final Sentence newSentence) {
+    protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence) {
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
@@ -184,21 +186,21 @@ public class StanfordTextProcessor implements TextProcessor {
                     //
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
                     if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
-                        Tag tag = getTag(token);
+                        Tag tag = getTag(lang, token);
                         if (tag != null) {
                             newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
-                        Tag newTag = new Tag(currToken.getToken());
+                        Tag newTag = new Tag(currToken.getToken(), lang);
                         newTag.setNe(currToken.getNe());
                         newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
                         currToken.reset();
-                        Tag tag = getTag(token);
+                        Tag tag = getTag(lang, token);
                         if (tag != null) {
                             newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
-                        Tag tag = new Tag(currToken.getToken());
+                        Tag tag = new Tag(currToken.getToken(), lang);
                         tag.setNe(currToken.getNe());
                         newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
                         currToken.reset();
@@ -223,7 +225,7 @@ public class StanfordTextProcessor implements TextProcessor {
         });
 
         if (currToken.getToken().length() > 0) {
-            Tag tag = new Tag(currToken.getToken());
+            Tag tag = new Tag(currToken.getToken(), lang);
             tag.setNe(currToken.getNe());
             newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
         }
@@ -264,6 +266,7 @@ public class StanfordTextProcessor implements TextProcessor {
         }
     }
 
+    @Override
     public AnnotatedText sentiment(AnnotatedText annotated) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
         annotated.getSentences().parallelStream().forEach((item) -> {
@@ -288,14 +291,15 @@ public class StanfordTextProcessor implements TextProcessor {
         return score;
     }
 
-    public Tag annotateSentence(String text) {
+    @Override
+    public Tag annotateSentence(String text, String lang) {
         Annotation document = new Annotation(text);
         pipelines.get(SENTIMENT).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(token))
+                    .map((token) -> getTag(lang, token))
                     .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
@@ -305,14 +309,14 @@ public class StanfordTextProcessor implements TextProcessor {
         return null;
     }
 
-    public Tag annotateTag(String text) {
+    public Tag annotateTag(String text, String lang) {
         Annotation document = new Annotation(text);
         pipelines.get(TOKENIZER).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(token))
+                    .map((token) -> getTag(lang, token))
                     .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
@@ -322,7 +326,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return null;
     }
 
-    private Tag getTag(CoreLabel token) {
+    private Tag getTag(String lang, CoreLabel token) {
         Pair<Boolean, Boolean> stopword = token.get(StopwordAnnotator.class);
         if (stopword.first()) {
             return null;
@@ -337,7 +341,7 @@ public class StanfordTextProcessor implements TextProcessor {
             lemma = token.get(CoreAnnotations.OriginalTextAnnotation.class);
         }
 
-        Tag tag = new Tag(lemma);
+        Tag tag = new Tag(lemma, lang);
         tag.setPos(pos);
         tag.setNe(ne);
         LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
@@ -388,7 +392,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public List<Tag> annotateTags(String text) {
+    public List<Tag> annotateTags(String text, String lang) {
         List<Tag> result = new ArrayList<>();
         Annotation document = new Annotation(text);
         pipelines.get(TOKENIZER).annotate(document);
@@ -396,7 +400,7 @@ public class StanfordTextProcessor implements TextProcessor {
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
             Stream<Tag> oTags = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(token))
+                    .map((token) -> getTag(lang, token))
                     .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()));
             oTags.forEach((tag) -> result.add(tag));
         }
