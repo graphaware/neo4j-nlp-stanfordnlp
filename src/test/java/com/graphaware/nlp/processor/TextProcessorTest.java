@@ -100,7 +100,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testAnnotatedTag() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        Tag annotateTag = textProcessor.annotateTag("en","winners");
+        Tag annotateTag = textProcessor.annotateTag("winners", "en");
         assertEquals(annotateTag.getLemma(), "winner");
     }
 
