@@ -69,7 +69,7 @@ public class StanfordTextProcessor implements TextProcessor {
         createTokenizerPipeline();
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
-        createPhrasePipeline();
+        //createPhrasePipeline();
 
         String pattern = "\\p{Punct}";
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -328,7 +328,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     private Tag getTag(String lang, CoreLabel token) {
         Pair<Boolean, Boolean> stopword = token.get(StopwordAnnotator.class);
-        if (stopword.first()) {
+        if (stopword != null && stopword.first()) {
             return null;
         }
         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
