@@ -136,6 +136,10 @@ public class StanfordTextProcessor implements TextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store) {
+        if (name=="") {
+          name = TOKENIZER;
+          LOG.debug("Using default pipeline: " + name);
+        }
         StanfordCoreNLP pipeline = pipelines.get(name);
         if (pipeline == null) {
             throw new RuntimeException("Pipeline: " + name + " doesn't exist");
@@ -269,6 +273,9 @@ public class StanfordTextProcessor implements TextProcessor {
     @Override
     public AnnotatedText sentiment(AnnotatedText annotated) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
+        if (pipeline==null) {
+          throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
+        }
         annotated.getSentences().parallelStream().forEach((item) -> {
             Annotation document = new Annotation(item.getSentence());
             pipeline.annotate(document);
