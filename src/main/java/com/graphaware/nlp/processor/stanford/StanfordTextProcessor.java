@@ -131,11 +131,11 @@ public class StanfordTextProcessor implements TextProcessor {
             default:
                 pipeline = TOKENIZER;
         }
-        return annotateText(text, id, pipeline, lang, store);
+        return annotateText(text, id, pipeline, lang, store, null);
     }
 
     @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store) {
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, String nerProject) {
         if (name=="") {
           name = TOKENIZER;
           LOG.debug("Using default pipeline: " + name);
@@ -414,6 +414,11 @@ public class StanfordTextProcessor implements TextProcessor {
         return result;
     }
 
+    @Override
+    public void train(String project, String alg, String model, String file, String lang) {
+      throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
+    }
+
     class TokenHolder {
 
         private String ne;
@@ -596,4 +601,5 @@ public class StanfordTextProcessor implements TextProcessor {
             throw new RuntimeException("No pipeline found with name: " + name);
         pipelines.remove(name);
     }
+
 }

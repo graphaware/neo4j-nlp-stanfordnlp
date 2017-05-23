@@ -169,7 +169,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, "phrase", "en", false);
+                + "the outcome of the election was exactly as we predicted.", 1, "phrase", "en", false, null);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);

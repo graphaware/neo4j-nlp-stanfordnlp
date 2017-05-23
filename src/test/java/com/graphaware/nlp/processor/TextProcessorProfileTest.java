@@ -33,6 +33,6 @@ public class TextProcessorProfileTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, "tokenizer", "lang", false);
+                + "the outcome of the election was exactly as we predicted.", 1, "tokenizer", "lang", false, null);
     }
 }
