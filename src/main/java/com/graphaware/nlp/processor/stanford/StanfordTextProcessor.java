@@ -69,7 +69,7 @@ public class StanfordTextProcessor implements TextProcessor {
         createTokenizerPipeline();
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
-        //createPhrasePipeline();
+        createPhrasePipeline();
 
         String pattern = "\\p{Punct}";
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -271,7 +271,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText sentiment(AnnotatedText annotated) {
+    public AnnotatedText sentiment(AnnotatedText annotated, String project) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
         if (pipeline==null) {
           throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
