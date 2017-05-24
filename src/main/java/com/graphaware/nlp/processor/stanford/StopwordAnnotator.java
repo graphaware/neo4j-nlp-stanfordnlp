@@ -21,12 +21,15 @@ import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.ling.CoreAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotator;
 
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.util.ArraySet;
 import edu.stanford.nlp.util.Pair;
+import java.util.Arrays;
 
 public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean, Boolean>> {
 
@@ -36,7 +39,6 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
     public static final String ANNOTATOR_CLASS = "stopword";
 
     public static final String STANFORD_STOPWORD = ANNOTATOR_CLASS;
-    public static final Requirement STOPWORD_REQUIREMENT = new Requirement(STANFORD_STOPWORD);
 
     /**
      * Property key to specify the comma delimited list of custom stopwords
@@ -49,7 +51,8 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
     public static final String IGNORE_STOPWORD_CASE = "ignore-stopword-case";
 
     /**
-     * Property key to specify of StopwordAnnotator should check word lemma as stopword
+     * Property key to specify of StopwordAnnotator should check word lemma as
+     * stopword
      */
     public static final String CHECK_LEMMA = "check-lemma";
 
@@ -87,17 +90,29 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
     }
 
     @Override
-    public Set<Requirement> requirementsSatisfied() {
-        return Collections.singleton(STOPWORD_REQUIREMENT);
+    public Set<Class<? extends CoreAnnotation>> requirementsSatisfied() {
+        return Collections.singleton(StopwordAnnotator.class);
     }
 
     @Override
-    public Set<Requirement> requires() {
+    public Set<Class<? extends CoreAnnotation>> requires() {
         if (checkLemma) {
-            return TOKENIZE_SSPLIT_POS_LEMMA;
-        }
-        else {
-            return TOKENIZE_AND_SSPLIT;
+            return Collections.unmodifiableSet(new ArraySet<>(Arrays.asList(
+                    CoreAnnotations.TextAnnotation.class,
+                    CoreAnnotations.TokensAnnotation.class,
+                    CoreAnnotations.CharacterOffsetBeginAnnotation.class,
+                    CoreAnnotations.CharacterOffsetEndAnnotation.class,
+                    CoreAnnotations.SentencesAnnotation.class,
+                    CoreAnnotations.LemmaAnnotation.class
+            )));
+        } else {
+            return Collections.unmodifiableSet(new ArraySet<>(Arrays.asList(
+                    CoreAnnotations.TextAnnotation.class,
+                    CoreAnnotations.TokensAnnotation.class,
+                    CoreAnnotations.CharacterOffsetBeginAnnotation.class,
+                    CoreAnnotations.CharacterOffsetEndAnnotation.class,
+                    CoreAnnotations.SentencesAnnotation.class
+            )));
         }
     }
 
@@ -107,7 +122,7 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
         return (Class<Pair<Boolean, Boolean>>) boolPair;
     }
 
-    public  CharArraySetWrapper getStopWordList(String stopwordList, boolean ignoreCase) {
+    public CharArraySetWrapper getStopWordList(String stopwordList, boolean ignoreCase) {
         String[] terms = stopwordList.split(",");
         CharArraySetWrapper stopwordSet = new CharArraySetWrapper(terms.length, ignoreCase);
         for (String term : terms) {
@@ -115,5 +130,5 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
         }
         return CharArraySetWrapper.unmodifiableSet(stopwordSet);
     }
-   
+
 }

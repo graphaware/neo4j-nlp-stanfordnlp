@@ -15,6 +15,10 @@
  */
 package com.graphaware.nlp.procedure;
 
+import com.graphaware.nlp.module.NLPConfiguration;
+import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.runtime.GraphAwareRuntime;
+import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +62,10 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 
     @Test
     public void overallTest() {
+        GraphAwareRuntime gaRuntime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
+        gaRuntime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
+        gaRuntime.start();
+        gaRuntime.waitUntilStarted();
         testAnnotatedText();
         clean();
         testAnnotatedTextWithSentiment();

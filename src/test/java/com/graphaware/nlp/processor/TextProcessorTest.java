@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.conceptnet5.ConceptNet5Importer;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
@@ -24,9 +23,7 @@ import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -188,7 +185,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertTrue(sentence1.getPhraseOccurrence(113).contains(new Phrase("Analysis")));
         
         //his(76)-> the third author(54)
-        assertTrue(sentence1.getPhraseOccurrence(76).get(1).getReference().getContent().equalsIgnoreCase("the third author"));
+        assertTrue(sentence1.getPhraseOccurrence(55).get(1).getContent().equalsIgnoreCase("the third author"));
         Sentence sentence2 = annotateText.getSentences().get(1);
         assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
         assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());
