@@ -415,7 +415,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public void train(String project, String alg, String model, String file, String lang) {
+    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params) {
       throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
     }
 
