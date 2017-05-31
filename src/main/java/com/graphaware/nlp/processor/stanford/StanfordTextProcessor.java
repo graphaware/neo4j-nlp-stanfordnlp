@@ -20,6 +20,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.util.OptionalNLPParameters;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
@@ -135,7 +136,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, String nerProject) {
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
         if (name=="") {
           name = TOKENIZER;
           LOG.debug("Using default pipeline: " + name);
@@ -271,7 +272,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText sentiment(AnnotatedText annotated, String project) {
+    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
         if (pipeline==null) {
           throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
