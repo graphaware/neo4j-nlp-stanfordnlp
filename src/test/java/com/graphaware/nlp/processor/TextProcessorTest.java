@@ -23,6 +23,7 @@ import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
@@ -71,7 +72,8 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
             ResourceIterator<Object> rowIterator = getTagsIterator(location);
             Node pakistanNode = (Node) rowIterator.next();
             assertFalse(rowIterator.hasNext());
-            assertEquals(pakistanNode.getProperty("ne"), "LOCATION");
+            String[] neList = (String[])pakistanNode.getProperty("ne");
+            assertEquals(neList[0], "LOCATION");
             tx.success();
         }
     }
@@ -81,7 +83,8 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
             ResourceIterator<Object> rowIterator = getTagsIterator(verb);
             Node pakistanNode = (Node) rowIterator.next();
             assertFalse(rowIterator.hasNext());
-            assertEquals(pakistanNode.getProperty("pos"), "VBZ");
+            String[] posL = (String[])pakistanNode.getProperty("pos");
+            assertEquals(posL[0], "VBZ");
             tx.success();
         }
     }

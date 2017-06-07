@@ -38,6 +38,7 @@ import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -197,7 +198,7 @@ public class StanfordTextProcessor implements TextProcessor {
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag newTag = new Tag(currToken.getToken(), lang);
-                        newTag.setNe(currToken.getNe());
+                        newTag.setNe(Arrays.asList(currToken.getNe()));
                         newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
                         currToken.reset();
                         Tag tag = getTag(lang, token);
@@ -206,7 +207,7 @@ public class StanfordTextProcessor implements TextProcessor {
                         }
                     } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = new Tag(currToken.getToken(), lang);
-                        tag.setNe(currToken.getNe());
+                        tag.setNe(Arrays.asList(currToken.getNe()));
                         newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
                         currToken.reset();
                         currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
@@ -231,7 +232,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
         if (currToken.getToken().length() > 0) {
             Tag tag = new Tag(currToken.getToken(), lang);
-            tag.setNe(currToken.getNe());
+            tag.setNe(Arrays.asList(currToken.getNe()));
             newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
         }
     }
@@ -350,8 +351,8 @@ public class StanfordTextProcessor implements TextProcessor {
         }
 
         Tag tag = new Tag(lemma, lang);
-        tag.setPos(pos);
-        tag.setNe(ne);
+        tag.setPos(Arrays.asList(pos));
+        tag.setNe(Arrays.asList(ne));
         LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
         return tag;
     }
