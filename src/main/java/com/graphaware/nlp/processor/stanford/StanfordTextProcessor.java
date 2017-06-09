@@ -20,7 +20,6 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.util.OptionalNLPParameters;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
