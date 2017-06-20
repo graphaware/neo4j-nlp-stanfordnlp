@@ -77,7 +77,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     private void createTokenizerPipeline() {
-        StanfordCoreNLP pipeline = new PipelineBuilder()
+        StanfordCoreNLP pipeline = new PipelineBuilder(TOKENIZER)
                 .tokenize()
                 .defaultStopWordAnnotator()
                 .threadNumber(6)
@@ -86,7 +86,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     private void createSentimentPipeline() {
-        StanfordCoreNLP pipeline = new PipelineBuilder()
+        StanfordCoreNLP pipeline = new PipelineBuilder(SENTIMENT)
                 .tokenize()
                 .extractSentiment()
                 .threadNumber(6)
@@ -95,7 +95,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     private void createTokenizerAndSentimentPipeline() {
-        StanfordCoreNLP pipeline = new PipelineBuilder()
+        StanfordCoreNLP pipeline = new PipelineBuilder(TOKENIZER_AND_SENTIMENT)
                 .tokenize()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
@@ -105,7 +105,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     private void createPhrasePipeline() {
-        StanfordCoreNLP pipeline = new PipelineBuilder()
+        StanfordCoreNLP pipeline = new PipelineBuilder(PHRASE)
                 .tokenize()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
@@ -137,7 +137,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
-        if (name=="") {
+        if (name == null || name.isEmpty()) {
           name = TOKENIZER;
           LOG.debug("Using default pipeline: " + name);
         }
@@ -567,7 +567,7 @@ public class StanfordTextProcessor implements TextProcessor {
     public void createPipeline(Map<String, Object> pipelineSpec) {
         //TODO add validation
         String name = (String) pipelineSpec.get("name");
-        PipelineBuilder pipelineBuilder = new PipelineBuilder();
+        PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
 
         if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
             pipelineBuilder.tokenize();

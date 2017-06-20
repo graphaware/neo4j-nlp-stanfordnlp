@@ -13,37 +13,43 @@ class PipelineBuilder {
     private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
     private final Properties properties = new Properties();
-    private final StringBuilder annotattors = new StringBuilder(); //basics annotators
+    private final StringBuilder annotators = new StringBuilder(); //basics annotators
     private int threadsNumber = 4;
+    
+    private final String name;
 
+    public PipelineBuilder(String name) {
+        this.name = name;
+    }
+    
     public PipelineBuilder tokenize() {
         checkForExistingAnnotators();
-        annotattors.append("tokenize, ssplit, pos, lemma, ner");
+        annotators.append("tokenize, ssplit, pos, lemma, ner");
         return this;
     }
 
     private void checkForExistingAnnotators() {
-        if (annotattors.toString().length() > 0) {
-            annotattors.append(", ");
+        if (annotators.toString().length() > 0) {
+            annotators.append(", ");
         }
     }
 
     public PipelineBuilder extractSentiment() {
         checkForExistingAnnotators();
-        annotattors.append("parse, sentiment");
+        annotators.append("parse, sentiment");
         //properties.setProperty("parse.model", "edu/stanford/nlp/models/srparser/englishSR.ser.gz");
         return this;
     }
 
     public PipelineBuilder extractRelations() {
         checkForExistingAnnotators();
-        annotattors.append("relation");
+        annotators.append("relation");
         return this;
     }
 
     public PipelineBuilder extractCoref() {
         checkForExistingAnnotators();
-        annotattors.append("mention, coref");
+        annotators.append("mention, coref");
         properties.setProperty("coref.doClustering", "true");
         properties.setProperty("coref.md.type", "rule");
         properties.setProperty("coref.mode", "statistical");
@@ -52,7 +58,7 @@ class PipelineBuilder {
 
     public PipelineBuilder defaultStopWordAnnotator() {
         checkForExistingAnnotators();
-        annotattors.append("stopword");
+        annotators.append("stopword");
         properties.setProperty("customAnnotatorClass.stopword", StopwordAnnotator.class.getName());
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
         return this;
@@ -61,13 +67,19 @@ class PipelineBuilder {
     public PipelineBuilder customStopWordAnnotator(String customStopWordList) {
         checkForExistingAnnotators();
         String stopWordList;
-        if (annotattors.indexOf("stopword") >= 0) {
-            String alreadyexistingStopWordList = properties.getProperty(StopwordAnnotator.STOPWORDS_LIST);
-            stopWordList = alreadyexistingStopWordList + "," + customStopWordList;
+        if (annotators.indexOf("stopword") >= 0) {
+//            String alreadyexistingStopWordList = properties.getProperty(StopwordAnnotator.STOPWORDS_LIST);
+//            stopWordList = alreadyexistingStopWordList + "," + customStopWordList;
+            throw new RuntimeException("A standard stopword annotator already exist!");
         } else {
-            annotattors.append("stopword");
-            properties.setProperty("customAnnotatorClass.stopword", StopwordAnnotator.class.getName());
-            stopWordList = customStopWordList;
+            String annoName = "stopword_" + name;
+            annotators.append(annoName);
+            properties.setProperty("customAnnotatorClass." + annoName, StopwordAnnotator.class.getName());
+            if (customStopWordList.startsWith("+")) {
+                stopWordList = CUSTOM_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+            } else {
+                stopWordList = customStopWordList;
+            }
         }
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
         return this;
@@ -86,7 +98,7 @@ class PipelineBuilder {
     }
 
     public StanfordCoreNLP build() {
-        properties.setProperty("annotators", annotattors.toString());
+        properties.setProperty("annotators", annotators.toString());
         properties.setProperty("threads", String.valueOf(threadsNumber));
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
         return pipeline;
