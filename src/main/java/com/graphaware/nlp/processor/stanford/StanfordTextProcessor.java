@@ -603,4 +603,9 @@ public class StanfordTextProcessor implements TextProcessor {
         pipelines.remove(name);
     }
 
+    @Override
+    public String test(String project, String alg, String model, String file, String lang) {
+        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
+    }
+
 }
