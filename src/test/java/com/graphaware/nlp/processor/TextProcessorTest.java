@@ -21,6 +21,7 @@ import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
+import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import java.util.Collection;
@@ -65,6 +66,15 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         checkLocation("Pakistan");
         checkVerb("show");
 
+    }
+    
+    @Test
+    public void testLemmaLowerCasing() {
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        AnnotatedText annotateText = textProcessor.annotateText("Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset", 1, TOKENIZER, "en", false, null);
+
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
     }
 
     private void checkLocation(String location) throws QueryExecutionException {
