@@ -5,6 +5,7 @@
  */
 package com.graphaware.nlp.processor.stanford;
 
+import static com.graphaware.nlp.processor.stanford.StopwordAnnotator.CHECK_LEMMA;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.Properties;
 
@@ -64,7 +65,7 @@ class PipelineBuilder {
         return this;
     }
 
-    public PipelineBuilder customStopWordAnnotator(String customStopWordList) {
+    public PipelineBuilder customStopWordAnnotator(String customStopWordList, boolean checkLemma) {
         checkForExistingAnnotators();
         String stopWordList;
         if (annotators.indexOf("stopword") >= 0) {
@@ -82,6 +83,7 @@ class PipelineBuilder {
             }
         }
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
+        properties.setProperty(StopwordAnnotator.CHECK_LEMMA, Boolean.toString(checkLemma));
         return this;
     }
 

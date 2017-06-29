@@ -336,7 +336,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     private Tag getTag(String lang, CoreLabel token) {
         Pair<Boolean, Boolean> stopword = token.get(StopwordAnnotator.class);
-        if (stopword != null && stopword.first()) {
+        if (stopword != null && (stopword.first() || stopword.second())) {
             return null;
         }
         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
@@ -574,10 +574,11 @@ public class StanfordTextProcessor implements TextProcessor {
         }
 
         String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
+        boolean checkLemma = (boolean) pipelineSpec.getOrDefault("checkLemmaIsStopWord", false);
         if (stopWords.equalsIgnoreCase("default")) {
             pipelineBuilder.defaultStopWordAnnotator();
         } else {
-            pipelineBuilder.customStopWordAnnotator(stopWords);
+            pipelineBuilder.customStopWordAnnotator(stopWords, checkLemma);
         }
 
         if ((Boolean) pipelineSpec.getOrDefault("sentiment", false)) {

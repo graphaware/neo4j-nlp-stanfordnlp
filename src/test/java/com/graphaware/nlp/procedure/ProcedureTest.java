@@ -537,7 +537,13 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 
     public void testStopWords() {
         try (Transaction tx = getDatabase().beginTx()) {
-            Result res = getDatabase().execute("CALL ga.nlp.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customStopWords', stopWords: '+,would,have,i,I,wish', threadNumber: 20})\n"
+            Result res = getDatabase().execute(
+                    "CALL ga.nlp.addPipeline({"
+                            + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                            + "name: 'customStopWords', "
+                            + "stopWords: '+,would,have,i,I,wish', "
+                            + "checkLemmaIsStopWord: true, "
+                            + "threadNumber: 20})\n"
                     + "YIELD result\n"
                     + "return result");
             ResourceIterator<Object> rowIterator = res.columnAs("result");
@@ -575,6 +581,41 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                 assertTrue(!tagValue.equalsIgnoreCase("wish"));
             }
             assertEquals(tagsCount, 5);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id2";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", "CIPSEA requires all federal agencies "
+                    + "to protect data or information acquired by the "
+                    + "agency under a pledge of confidentiality for exclusively "
+                    + "statistical purposes from being disclosed in identifiable "
+                    + "form.");
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, "
+                    + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                    + "pipeline:'customStopWords'}) "
+                    + "YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Node resultNode = (Node) rowIterator.next();
+            assertEquals(resultNode.getProperty("id"), id);
+            params.clear();
+            params.put("id", id);
+            Result tags = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence)-[:HAS_TAG]->(result:Tag) RETURN result.value as tag", params);
+            rowIterator = tags.columnAs("tag");
+            assertTrue(rowIterator.hasNext());
+            int tagsCount = 0;
+            while (rowIterator.hasNext()) {
+                tagsCount++;
+                String tagValue = (String) rowIterator.next();
+                assertTrue(!tagValue.equalsIgnoreCase("be"));
+            }
+            assertEquals(tagsCount, 19);
             tx.success();
         }
     }
