@@ -126,7 +126,7 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
         String[] terms = stopwordList.split(",");
         CharArraySetWrapper stopwordSet = new CharArraySetWrapper(terms.length, ignoreCase);
         for (String term : terms) {
-            stopwordSet.add(term);
+            stopwordSet.add(term.trim());
         }
         return CharArraySetWrapper.unmodifiableSet(stopwordSet);
     }

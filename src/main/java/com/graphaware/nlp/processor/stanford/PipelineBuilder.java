@@ -5,7 +5,6 @@
  */
 package com.graphaware.nlp.processor.stanford;
 
-import static com.graphaware.nlp.processor.stanford.StopwordAnnotator.CHECK_LEMMA;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.Properties;
 
@@ -26,6 +25,20 @@ class PipelineBuilder {
     public PipelineBuilder tokenize() {
         checkForExistingAnnotators();
         annotators.append("tokenize, ssplit, pos, lemma, ner");
+        return this;
+    }
+    
+    public PipelineBuilder cleanxml() {
+        checkForExistingAnnotators();
+        annotators.append("cleanxml");
+        properties.setProperty("clean.allowflawedxml", "true");
+        return this;
+    }
+    
+    public PipelineBuilder truecase() {
+        checkForExistingAnnotators();
+        annotators.append("truecase");
+        properties.setProperty("truecase.overwriteText", "true");
         return this;
     }
 

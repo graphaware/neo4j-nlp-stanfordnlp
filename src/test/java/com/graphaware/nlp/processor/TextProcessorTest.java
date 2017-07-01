@@ -26,6 +26,7 @@ import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import java.util.HashMap;
 import java.util.Map;
+import org.bouncycastle.jcajce.provider.digest.GOST3411;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -69,11 +70,24 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     
     @Test
     public void testLemmaLowerCasing() {
+        String testText = "Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset";
+        
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        AnnotatedText annotateText = textProcessor.annotateText("Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset", 1, TOKENIZER, "en", false, null);
+        AnnotatedText annotateText = textProcessor.annotateText(testText, 1, TOKENIZER, "en", false, null);
 
         assertEquals(1, annotateText.getSentences().size());
-        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        assertEquals("Governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        
+        Map<String, Object> pipelineSpec = new HashMap<>();
+        pipelineSpec.put("name", "tokenizeWithTrueCase");
+        pipelineSpec.put("truecase", true);
+        textProcessor.createPipeline(pipelineSpec);
+        
+        annotateText = textProcessor.annotateText(testText, 1, "tokenizeWithTrueCase", "en", false, null);
+
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals("GOVERNANCE", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        
     }
 
     private void checkLocation(String location) throws QueryExecutionException {
@@ -168,6 +182,13 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testAnnotatedTextWithPosition() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        Map<String, Object> pipelineSpec = new HashMap<>();
+        pipelineSpec.put("name", "tokenizeWithTrueCase");
+        pipelineSpec.put("truecase", true);
+        pipelineSpec.put("sentiment", true);
+        pipelineSpec.put("coref", true);
+        pipelineSpec.put("relations", true);
+        textProcessor.createPipeline(pipelineSpec);
         AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
@@ -178,7 +199,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, "phrase", "en", false, null);
+                + "the outcome of the election was exactly as we predicted.", 1, "tokenizeWithTrueCase", "en", false, null);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);

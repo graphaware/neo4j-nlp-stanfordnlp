@@ -539,11 +539,11 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         try (Transaction tx = getDatabase().beginTx()) {
             Result res = getDatabase().execute(
                     "CALL ga.nlp.addPipeline({"
-                            + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
-                            + "name: 'customStopWords', "
-                            + "stopWords: '+,would,have,i,I,wish', "
-                            + "checkLemmaIsStopWord: true, "
-                            + "threadNumber: 20})\n"
+                    + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                    + "name: 'customStopWords', "
+                    + "stopWords: '+,would,have,i,I,wish,nasa', "
+                    + "checkLemmaIsStopWord: true, "
+                    + "threadNumber: 20})\n"
                     + "YIELD result\n"
                     + "return result");
             ResourceIterator<Object> rowIterator = res.columnAs("result");
@@ -583,7 +583,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertEquals(tagsCount, 5);
             tx.success();
         }
-        
+
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id2";
             Map<String, Object> params = new HashMap<>();

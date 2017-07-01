@@ -56,6 +56,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
     public static final String TOKENIZER = "tokenizer";
+    public static final String XML_TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
     public static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
     public static final String PHRASE = "phrase";
@@ -344,7 +345,13 @@ public class StanfordTextProcessor implements TextProcessor {
         String lemma;
 
         if (ne.equals(backgroundSymbol)) {
-            lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+            String lemmaValue = token.get(CoreAnnotations.LemmaAnnotation.class);
+            String value = token.get(CoreAnnotations.TextAnnotation.class);
+            if (lemmaValue!= null && lemmaValue.equalsIgnoreCase(value)) {
+                lemma = value;
+            } else {
+                lemma = lemmaValue;
+            }
         } else {
             lemma = token.get(CoreAnnotations.OriginalTextAnnotation.class);
         }
@@ -572,6 +579,14 @@ public class StanfordTextProcessor implements TextProcessor {
         if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
             pipelineBuilder.tokenize();
         }
+        
+        if ((Boolean) pipelineSpec.getOrDefault("cleanxml", false)) {
+            pipelineBuilder.cleanxml();
+        }
+        
+        if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
+            pipelineBuilder.truecase();
+        }
 
         String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
         boolean checkLemma = (boolean) pipelineSpec.getOrDefault("checkLemmaIsStopWord", false);
@@ -590,7 +605,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if ((Boolean) pipelineSpec.getOrDefault("relations", false)) {
             pipelineBuilder.extractRelations();
         }
-        Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4);
+        Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4L);
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();
