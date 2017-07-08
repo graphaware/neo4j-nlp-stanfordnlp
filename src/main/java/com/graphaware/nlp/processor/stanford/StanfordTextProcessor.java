@@ -187,7 +187,7 @@ public class StanfordTextProcessor implements TextProcessor {
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
         tokens.stream()
-                .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
+                .filter((token) -> (token != null) && checkPunctuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
                 .map((token) -> {
                     //
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
@@ -309,7 +309,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
                     .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
+                    .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
                 return oTag.get();
@@ -326,7 +326,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
                     .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
+                    .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
                 return oTag.get();
@@ -363,7 +363,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return tag;
     }
 
-    public boolean checkPuntuation(String value) {
+    public boolean checkPunctuation(String value) {
         Matcher match = patternCheck.matcher(value);
         return !match.find();
     }
@@ -416,7 +416,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (sentence.isPresent()) {
             Stream<Tag> oTags = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
                     .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()));
+                    .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()));
             oTags.forEach((tag) -> result.add(tag));
         }
         return result;
