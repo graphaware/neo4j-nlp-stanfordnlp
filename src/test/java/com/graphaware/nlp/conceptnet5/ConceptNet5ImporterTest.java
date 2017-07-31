@@ -18,11 +18,14 @@ package com.graphaware.nlp.conceptnet5;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
+import java.util.Arrays;
 import java.util.List;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 public class ConceptNet5ImporterTest {
     
+    public static final String TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
     public ConceptNet5ImporterTest() {
     }
 
@@ -31,15 +34,16 @@ public class ConceptNet5ImporterTest {
      */
     @Test
     public void testImportHierarchy() {
-//        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-//        //ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
-//        ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor).build();
-//        Tag source = textProcessor.annotateTag("en", "Wild Wood");
-//        List<Tag> result = instance.importHierarchy(source, "en");
-//        List<Tag> expResult = null;
-//        //assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        //fail("The test case is a prototype.");
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor(TEXT_PROCESSOR);
+        //ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
+        ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.conceptnet.io").build();
+        String lang = "en";
+        Tag source = textProcessor.annotateTag("circuit", lang);
+        List<Tag> result = instance.importHierarchy(source, lang, true, 2, textProcessor, Arrays.asList("IsA"), Arrays.asList("NN"));
+        assertEquals(4, result.size());
+        //assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        //fail("The test case is a prototype.");
     }
     
 }

@@ -76,7 +76,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         AnnotatedText annotateText = textProcessor.annotateText(testText, 1, TOKENIZER, "en", false, null);
 
         assertEquals(1, annotateText.getSentences().size());
-        assertEquals("Governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
         
         Map<String, Object> pipelineSpec = new HashMap<>();
         pipelineSpec.put("name", "tokenizeWithTrueCase");
@@ -86,9 +86,21 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         annotateText = textProcessor.annotateText(testText, 1, "tokenizeWithTrueCase", "en", false, null);
 
         assertEquals(1, annotateText.getSentences().size());
-        assertEquals("GOVERNANCE", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
         
     }
+    
+    @Test
+    public void testLemmaSprittingByPunctuation() {
+        String testText = "Ser Emmon Cuy, Ser Robar Royce, Ser Parmen Crane, they'd sworn as well.";
+        
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        AnnotatedText annotateText = textProcessor.annotateText(testText, 1, TOKENIZER, "en", false, null);
+
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(6, annotateText.getSentences().get(0).getTags().size());
+    }
+    
 
     private void checkLocation(String location) throws QueryExecutionException {
         try (Transaction tx = getDatabase().beginTx()) {
