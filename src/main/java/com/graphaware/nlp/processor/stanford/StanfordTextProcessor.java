@@ -139,8 +139,8 @@ public class StanfordTextProcessor implements TextProcessor {
     @Override
     public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
         if (name == null || name.isEmpty()) {
-          name = TOKENIZER;
-          LOG.debug("Using default pipeline: " + name);
+            name = TOKENIZER;
+            LOG.debug("Using default pipeline: " + name);
         }
         StanfordCoreNLP pipeline = pipelines.get(name);
         if (pipeline == null) {
@@ -187,28 +187,39 @@ public class StanfordTextProcessor implements TextProcessor {
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
         tokens.stream()
-                .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
+                .filter((token) -> (token != null))
                 .map((token) -> {
                     //
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                    if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
+                    if (!checkPunctuation(token.get(CoreAnnotations.LemmaAnnotation.class))) {
+                        if (currToken.getToken().length() > 0) {
+                            Tag newTag = new Tag(currToken.getToken(), lang);
+                            newTag.setNe(Arrays.asList(currToken.getNe()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
+                            currToken.reset();
+                        }
+                    } else if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = getTag(lang, token);
                         if (tag != null) {
                             newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
-                        Tag newTag = new Tag(currToken.getToken(), lang);
-                        newTag.setNe(Arrays.asList(currToken.getNe()));
-                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
+                        if (currToken.getToken().length() > 0) {
+                            Tag newTag = new Tag(currToken.getToken(), lang);
+                            newTag.setNe(Arrays.asList(currToken.getNe()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
+                        }
                         currToken.reset();
                         Tag tag = getTag(lang, token);
                         if (tag != null) {
                             newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
-                        Tag tag = new Tag(currToken.getToken(), lang);
-                        tag.setNe(Arrays.asList(currToken.getNe()));
-                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
+                        if (currToken.getToken().length() > 0) {
+                            Tag tag = new Tag(currToken.getToken(), lang);
+                            tag.setNe(Arrays.asList(currToken.getNe()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
+                        }
                         currToken.reset();
                         currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
                         currToken.setBeginPosition(token.beginPosition());
@@ -275,8 +286,8 @@ public class StanfordTextProcessor implements TextProcessor {
     @Override
     public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
-        if (pipeline==null) {
-          throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
+        if (pipeline == null) {
+            throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
         }
         annotated.getSentences().parallelStream().forEach((item) -> {
             Annotation document = new Annotation(item.getSentence());
@@ -309,7 +320,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
                     .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
+                    .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
                 return oTag.get();
@@ -318,18 +329,30 @@ public class StanfordTextProcessor implements TextProcessor {
         return null;
     }
 
+    @Override
     public Tag annotateTag(String text, String lang) {
         Annotation document = new Annotation(text);
         pipelines.get(TOKENIZER).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
-            Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
-                    .findFirst();
-            if (oTag.isPresent()) {
-                return oTag.get();
+            List<CoreLabel> tokens = sentence.get().get(CoreAnnotations.TokensAnnotation.class);
+            if (tokens != null) {
+                if (tokens.size() == 1) {
+                    Optional<Tag> oTag = tokens.stream()
+                            .map((token) -> getTag(lang, token))
+                            .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()))
+                            .findFirst();
+                    if (oTag.isPresent()) {
+                        return oTag.get();
+                    }
+                } else if (tokens.size() > 1) {
+                    Tag tag = new Tag(text, lang);
+                    tag.setPos(Arrays.asList());
+                    tag.setNe(Arrays.asList());
+                    LOG.info("POS: " + tag.getPosAsList() + " ne: " + tag.getNeAsList() + " lemma: " + tag.getLemma());
+                    return tag;
+                }
             }
         }
         return null;
@@ -347,7 +370,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (ne.equals(backgroundSymbol)) {
             String lemmaValue = token.get(CoreAnnotations.LemmaAnnotation.class);
             String value = token.get(CoreAnnotations.TextAnnotation.class);
-            if (lemmaValue!= null && lemmaValue.equalsIgnoreCase(value)) {
+            if (lemmaValue != null && lemmaValue.equalsIgnoreCase(value)) {
                 lemma = value;
             } else {
                 lemma = lemmaValue;
@@ -363,7 +386,8 @@ public class StanfordTextProcessor implements TextProcessor {
         return tag;
     }
 
-    public boolean checkPuntuation(String value) {
+    @Override
+    public boolean checkPunctuation(String value) {
         Matcher match = patternCheck.matcher(value);
         return !match.find();
     }
@@ -416,7 +440,7 @@ public class StanfordTextProcessor implements TextProcessor {
         if (sentence.isPresent()) {
             Stream<Tag> oTags = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
                     .map((token) -> getTag(lang, token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()));
+                    .filter((tag) -> (tag != null) && checkPunctuation(tag.getLemma()));
             oTags.forEach((tag) -> result.add(tag));
         }
         return result;
@@ -424,7 +448,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     @Override
     public String train(String project, String alg, String model, String file, String lang, Map<String, String> params) {
-      throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
+        throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
     }
 
     class TokenHolder {
@@ -565,11 +589,11 @@ public class StanfordTextProcessor implements TextProcessor {
     public List<String> getPipelines() {
         return new ArrayList<>(pipelines.keySet());
     }
-    
+
     public boolean checkPipeline(String name) {
         return pipelines.containsKey(name);
     }
-    
+
     @Override
     public void createPipeline(Map<String, Object> pipelineSpec) {
         //TODO add validation
@@ -579,11 +603,11 @@ public class StanfordTextProcessor implements TextProcessor {
         if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
             pipelineBuilder.tokenize();
         }
-        
+
         if ((Boolean) pipelineSpec.getOrDefault("cleanxml", false)) {
             pipelineBuilder.cleanxml();
         }
-        
+
         if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
             pipelineBuilder.truecase();
         }
@@ -611,11 +635,12 @@ public class StanfordTextProcessor implements TextProcessor {
         StanfordCoreNLP pipeline = pipelineBuilder.build();
         pipelines.put(name, pipeline);
     }
-    
+
     @Override
     public void removePipeline(String name) {
-        if (!pipelines.containsKey(name))
+        if (!pipelines.containsKey(name)) {
             throw new RuntimeException("No pipeline found with name: " + name);
+        }
         pipelines.remove(name);
     }
 
