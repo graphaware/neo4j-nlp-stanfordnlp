@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.graphaware.nlp.processor.stanford;
 
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -39,6 +34,12 @@ class PipelineBuilder {
         checkForExistingAnnotators();
         annotators.append("truecase");
         properties.setProperty("truecase.overwriteText", "true");
+        return this;
+    }
+
+    public PipelineBuilder relation() {
+        checkForExistingAnnotators();
+        annotators.append("parse, depparse, relation");
         return this;
     }
 

@@ -60,6 +60,7 @@ public class StanfordTextProcessor implements TextProcessor {
     public static final String SENTIMENT = "sentiment";
     public static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
     public static final String PHRASE = "phrase";
+    public static final String DEPENDENCY_GRAPH = "dependencyGraph";
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
@@ -72,6 +73,7 @@ public class StanfordTextProcessor implements TextProcessor {
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
         createPhrasePipeline();
+        createDependencyGraphPipeline();
 
         String pattern = "\\p{Punct}";
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -117,6 +119,17 @@ public class StanfordTextProcessor implements TextProcessor {
         pipelines.put(PHRASE, pipeline);
     }
 
+    private void createDependencyGraphPipeline() {
+        StanfordCoreNLP pipeline = new PipelineBuilder(DEPENDENCY_GRAPH)
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .relation()
+                .threadNumber(4)
+                .build();
+        pipelines.put(DEPENDENCY_GRAPH, pipeline);
+
+    }
+
     @Override
     public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store) {
         String pipeline;
@@ -130,14 +143,16 @@ public class StanfordTextProcessor implements TextProcessor {
             case 2:
                 pipeline = PHRASE;
                 break;
+            case 3:
+                pipeline = DEPENDENCY_GRAPH;
+                break;
             default:
                 pipeline = TOKENIZER;
         }
         return annotateText(text, id, pipeline, lang, store, null);
     }
 
-    @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
+    public StanfordCoreNLP getPipeline(String name) {
         if (name == null || name.isEmpty()) {
             name = TOKENIZER;
             LOG.debug("Using default pipeline: " + name);
@@ -146,8 +161,16 @@ public class StanfordTextProcessor implements TextProcessor {
         if (pipeline == null) {
             throw new RuntimeException("Pipeline: " + name + " doesn't exist");
         }
+
+        return pipeline;
+    }
+
+    @Override
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
+
         AnnotatedText result = new AnnotatedText(id);
         Annotation document = new Annotation(text);
+        StanfordCoreNLP pipeline = getPipeline(name);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
