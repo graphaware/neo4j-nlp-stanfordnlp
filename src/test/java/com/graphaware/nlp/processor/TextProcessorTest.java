@@ -256,4 +256,12 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
         peristence.persistOnGraph(annotateText, false);        
     }
+
+    @Test
+    public void testTypedDependenciesAreFoundAndStored() {
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        AnnotatedText annotateText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", 1, 3, "en", false);
+        GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
+        peristence.persistOnGraph(annotateText, false);
+    }
 }
