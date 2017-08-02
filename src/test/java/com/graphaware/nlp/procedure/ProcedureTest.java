@@ -67,25 +67,27 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         gaRuntime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         gaRuntime.start();
         gaRuntime.waitUntilStarted();
-        testAnnotatedText();
+//        testAnnotatedText();
+//        clean();
+//        testAnnotatedTextWithSentiment();
+//        clean();
+//        testAnnotatedTextAndSentiment();
+//        clean();
+//        testAnnotatedTextOnMultiple();
+//        clean();
+//        testConceptText();
+//        clean();
+//        testLanguageDetection();
+//        clean();
+//        testSupportedLanguage();
+//        clean();
+//        testFilter();
+//        clean();
+//        testGetProceduresManagement();
+//        clean();
+//        testStopWords();
+        testTextRank();
         clean();
-        testAnnotatedTextWithSentiment();
-        clean();
-        testAnnotatedTextAndSentiment();
-        clean();
-        testAnnotatedTextOnMultiple();
-        clean();
-        testConceptText();
-        clean();
-        testLanguageDetection();
-        clean();
-        testSupportedLanguage();
-        clean();
-        testFilter();
-        clean();
-        testGetProceduresManagement();
-        clean();
-        testStopWords();
     }
 
     private void clean() {
@@ -616,6 +618,44 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                 assertTrue(!tagValue.equalsIgnoreCase("be"));
             }
             assertEquals(tagsCount, 19);
+            tx.success();
+        }
+    }
+
+    public void testTextRank() {
+        String myText = "Compatibility of systems of linear constraints over "
+                + "the set of natural numbers. "
+                + "Criteria of compatibility of a system of linear Diophantine "
+                + "equations, strict inequations, and nonstrict inequations are "
+                + "considered. Upper bounds for components of a minimal set of solutions "
+                + "and algorithms of construction of minimal generating sets of solutions "
+                + "for all types of systems are given. These criteria and the corresponding "
+                + "algorithms for constructing a minimal supporting set of solutions "
+                + "can be used in solving all the considered types systems and systems of mixed types.";
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", myText);
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}}) YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Node resultNode = (Node) rowIterator.next();
+            assertEquals(resultNode.getProperty("id"), id);
+            params.clear();
+            params.put("id", id);
+            Result tags = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence)-[:HAS_TAG]->(result:Tag) RETURN result", params);
+            rowIterator = tags.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            tags = getDatabase().execute(
+                    "MATCH (a:AnnotatedText) with a\n"
+                    + "CALL ga.nlp.ml.textrank.compute({annotatedText:a}) YIELD result\n"
+                    + "return result;", params);
+            rowIterator = tags.columnAs("result");
+            assertTrue(rowIterator.hasNext());
             tx.success();
         }
     }
