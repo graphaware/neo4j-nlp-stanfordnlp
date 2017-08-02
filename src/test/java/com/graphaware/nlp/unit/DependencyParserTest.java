@@ -1,6 +1,7 @@
 package com.graphaware.nlp.unit;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -66,8 +67,26 @@ public class DependencyParserTest {
 
         List<SemanticGraphEdge> edges = graph.edgeListSorted();
         for (SemanticGraphEdge edge : edges) {
-            System.out.println(edge.getSource().docID());
+            System.out.println(edge.getRelation().getShortName());
             System.out.println(String.format("Source is : %s - Target is : %s - Relation is : %s", edge.getSource(), edge.getTarget(), edge.getRelation()));
+        }
+    }
+
+    @Test
+    public void testEnhancedDependencyParsingWithComplexTest() throws Exception {
+        String text = "Softfoot and Small Paul would kill the Old Bear, Dirk would do Blane, and Lark and his cousins would silence Bannen and old Dywen, to keep them from sniffing after their trail.";
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
+
+        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.DEPENDENCY_GRAPH, "en", false, Collections.EMPTY_MAP);
+
+        Annotation document = new Annotation(text);
+        pipeline.annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        for (CoreMap sentence : sentences) {
+            System.out.println(sentence.toString());
+            SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
+            System.out.println(graph);
         }
     }
 
