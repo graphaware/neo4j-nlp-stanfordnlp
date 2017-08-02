@@ -257,6 +257,7 @@ public class StanfordTextProcessor implements TextProcessor {
                         // happens for eg when there is a space before a Tag, hence the "Before"
                         String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
                         String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
+                        currToken.updateToken(before);
                         currToken.updateToken(currentText, tokenId);
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
