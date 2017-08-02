@@ -74,7 +74,7 @@ public class DependencyParserTest {
 
     @Test
     public void testEnhancedDependencyParsingWithComplexTest() throws Exception {
-        String text = "Softfoot and Small Paul would kill the Old Bear, Dirk would do Blane, and Lark and his cousins would silence Bannen and old Dywen, to keep them from sniffing after their trail.";
+        String text = "Softfoot and Small Paul would kill the Old Beard, Dirk would do Blane, and Lark and his cousins would silence Bannen and old Dywen, to keep them from sniffing after their trail.";
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
@@ -87,6 +87,9 @@ public class DependencyParserTest {
             System.out.println(sentence.toString());
             SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
             System.out.println(graph);
+            for (SemanticGraphEdge edge : graph.edgeListSorted()) {
+                System.out.println(String.format("Source is : %s - Target is : %s - Relation is : %s", edge.getSource(), edge.getTarget(), edge.getRelation()));
+            }
         }
     }
 

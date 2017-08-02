@@ -39,7 +39,7 @@ class PipelineBuilder {
 
     public PipelineBuilder dependencies() {
         checkForExistingAnnotators();
-        annotators.append("parse, depparse, relation");
+        annotators.append("parse");
         return this;
     }
 
