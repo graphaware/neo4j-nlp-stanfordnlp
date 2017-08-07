@@ -253,7 +253,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testAnnotatedShortText2() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", 1, 1, "en", false);
+        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", 1, 3, "en", false);
         assertEquals(1, annotateText.getSentences().size());
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
         peristence.persistOnGraph(annotateText, false);        

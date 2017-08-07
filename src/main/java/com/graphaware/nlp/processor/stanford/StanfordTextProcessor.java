@@ -183,9 +183,7 @@ public class StanfordTextProcessor implements TextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
             extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
-            if (!name.equals(DEPENDENCY_GRAPH)) {
-                extractPhrases(sentence, newSentence);
-            }
+//            extractPhrases(sentence, newSentence);
             extractDependencies(sentence, newSentence);
             result.addSentence(newSentence);
 //            newSentence.debugTagOccurenceTokenIds();
@@ -290,6 +288,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
         semanticGraph.getRoots().forEach(root -> {
             String rootId = newSentence.getId() + root.beginPosition() + root.endPosition() + root.lemma();
+//            System.out.println("found root with id: " + rootId);
             TypedDependency typedDependency = new TypedDependency(rootId, rootId, "ROOT", null);
             newSentence.addTypedDependency(typedDependency);
         });
