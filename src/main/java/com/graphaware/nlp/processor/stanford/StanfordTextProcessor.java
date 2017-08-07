@@ -182,9 +182,12 @@ public class StanfordTextProcessor implements TextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
             extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
-            extractPhrases(sentence, newSentence);
+            if (!name.equals(DEPENDENCY_GRAPH)) {
+                extractPhrases(sentence, newSentence);
+            }
             extractDependencies(sentence, newSentence);
             result.addSentence(newSentence);
+//            newSentence.debugTagOccurenceTokenIds();
         });
         extractRelationship(result, sentences, document);
         return result;
@@ -226,7 +229,11 @@ public class StanfordTextProcessor implements TextProcessor {
                     } else if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = getTag(lang, token);
                         if (tag != null) {
-                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag), getTokenIdsToUse(tokenId, currToken.getTokenIds()));
+                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag), Arrays.asList(tokenId));
+                        } else {
+                            if (!currToken.getTokenIds().contains(tokenId)) {
+                                currToken.getTokenIds().add(tokenId);
+                            }
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
@@ -662,6 +669,10 @@ public class StanfordTextProcessor implements TextProcessor {
 
         if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
             pipelineBuilder.truecase();
+        }
+
+        if ((Boolean) pipelineSpec.getOrDefault("dependency", false)) {
+            pipelineBuilder.dependencies();
         }
 
         String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");

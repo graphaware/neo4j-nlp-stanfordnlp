@@ -94,6 +94,27 @@ public class DependencyParserTest {
     }
 
     @Test
+    public void testEnhancedDependencyParsingWithQuestion() throws Exception {
+        String text = "What consoles can be used to play Twilight Princess?";
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
+
+        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.DEPENDENCY_GRAPH, "en", false, Collections.EMPTY_MAP);
+
+        Annotation document = new Annotation(text);
+        pipeline.annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        for (CoreMap sentence : sentences) {
+            System.out.println(sentence.toString());
+            SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
+            System.out.println(graph);
+            for (SemanticGraphEdge edge : graph.edgeListSorted()) {
+                System.out.println(String.format("Source is : %s - Target is : %s - Relation is : %s", edge.getSource(), edge.getTarget(), edge.getRelation()));
+            }
+        }
+    }
+
+    @Test
     public void testTagMerging() throws Exception {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
