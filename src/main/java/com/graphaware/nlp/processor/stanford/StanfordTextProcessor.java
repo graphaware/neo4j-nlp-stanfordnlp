@@ -171,6 +171,7 @@ public class StanfordTextProcessor implements TextProcessor {
         AnnotatedText result = new AnnotatedText(id);
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(name);
+
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
@@ -218,7 +219,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
-                    String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                        String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
                     if (!checkPunctuation(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
@@ -286,6 +287,12 @@ public class StanfordTextProcessor implements TextProcessor {
         if (semanticGraph == null) {
             return;
         }
+
+        semanticGraph.getRoots().forEach(root -> {
+            String rootId = newSentence.getId() + root.beginPosition() + root.endPosition() + root.lemma();
+            TypedDependency typedDependency = new TypedDependency(rootId, rootId, "ROOT", null);
+            newSentence.addTypedDependency(typedDependency);
+        });
 
         for (SemanticGraphEdge edge : semanticGraph.edgeListSorted()) {
             String sourceId = newSentence.getId() + edge.getSource().beginPosition() + edge.getSource().endPosition() + edge.getSource().lemma();

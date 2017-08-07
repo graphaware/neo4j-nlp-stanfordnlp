@@ -16,9 +16,7 @@ import edu.stanford.nlp.util.CoreMap;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class DependencyParserTest {
 
@@ -95,11 +93,18 @@ public class DependencyParserTest {
 
     @Test
     public void testEnhancedDependencyParsingWithQuestion() throws Exception {
-        String text = "What consoles can be used to play Twilight Princess?";
+        String text = "In what area was Frederic born in";
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
-        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.DEPENDENCY_GRAPH, "en", false, Collections.EMPTY_MAP);
+        Map<String, Object> customPipeline = new HashMap<>();
+        customPipeline.put("textProcessor", "com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        customPipeline.put("name", "custom");
+        customPipeline.put("stopWords", "start,starts");
+        customPipeline.put("dependency", true);
+        ((StanfordTextProcessor) textProcessor).createPipeline(customPipeline);
+
+        textProcessor.annotateText(text, "id", "custom", "en", false, Collections.EMPTY_MAP);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -107,6 +112,9 @@ public class DependencyParserTest {
         for (CoreMap sentence : sentences) {
             System.out.println(sentence.toString());
             SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
+            graph.getRoots().forEach(root -> {
+                System.out.println(root);
+            });
             System.out.println(graph);
             for (SemanticGraphEdge edge : graph.edgeListSorted()) {
                 System.out.println(String.format("Source is : %s - Target is : %s - Relation is : %s", edge.getSource(), edge.getTarget(), edge.getRelation()));

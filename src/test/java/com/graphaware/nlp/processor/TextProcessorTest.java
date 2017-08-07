@@ -26,6 +26,8 @@ import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
+
 import org.bouncycastle.jcajce.provider.digest.GOST3411;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -255,6 +257,23 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals(1, annotateText.getSentences().size());
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
         peristence.persistOnGraph(annotateText, false);        
+    }
+
+    @Test
+    public void testAnnotatedQuestionWithNoStopwords() {
+        String text = "What is in front of the Notre Dame Main Building?";
+        Map<String, Object> customPipeline = new HashMap<>();
+        customPipeline.put("textProcessor", "com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        customPipeline.put("name", "custom");
+        customPipeline.put("stopWords", "start,starts");
+        customPipeline.put("dependency", true);
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        textProcessor.createPipeline(customPipeline);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, 1, "custom", "en", false, null);
+
+        assertEquals(1, annotatedText.getSentences().size());
+        Sentence sentence = annotatedText.getSentences().get(0);
+        assertEquals("be", sentence.getTagOccurrence(5).getLemma());
     }
 
     @Test
