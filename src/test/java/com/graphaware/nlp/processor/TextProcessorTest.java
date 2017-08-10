@@ -15,10 +15,7 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.Phrase;
-import com.graphaware.nlp.domain.Sentence;
-import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
 import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;

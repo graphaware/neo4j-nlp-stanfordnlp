@@ -67,6 +67,8 @@ public class StanfordTextProcessor implements TextProcessor {
     private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
     private final Pattern patternCheck;
 
+    private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
+
     public StanfordTextProcessor() {
         //Creating default pipeline
         createTokenizerPipeline();
@@ -86,6 +88,8 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(TOKENIZER, pipeline);
+        List<String> actives = Arrays.asList("tokenizer");
+        pipelineInfos.put(TOKENIZER, createPipelineInfo(TOKENIZER, pipeline, actives));
     }
 
     private void createSentimentPipeline() {
@@ -95,6 +99,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(SENTIMENT, pipeline);
+        pipelineInfos.put(SENTIMENT, createPipelineInfo(SENTIMENT, pipeline, Arrays.asList("sentiment")));
     }
 
     private void createTokenizerAndSentimentPipeline() {
@@ -105,6 +110,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(TOKENIZER_AND_SENTIMENT, pipeline);
+        pipelineInfos.put(TOKENIZER_AND_SENTIMENT, createPipelineInfo(TOKENIZER_AND_SENTIMENT, pipeline, Arrays.asList("tokenize", "sentiment")));
     }
 
     private void createPhrasePipeline() {
@@ -117,6 +123,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(PHRASE, pipeline);
+        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment")));
     }
 
     private void createDependencyGraphPipeline() {
@@ -127,7 +134,26 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(DEPENDENCY_GRAPH, pipeline);
+        pipelineInfos.put(DEPENDENCY_GRAPH, createPipelineInfo(DEPENDENCY_GRAPH, pipeline, Arrays.asList("tokenize", "dependency")));
 
+    }
+
+    private PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
+        List<String> stopwords = PipelineBuilder.getDefaultStopwords();
+        PipelineInfo info = new PipelineInfo(name, this.getClass().getName(), getPipelineProperties(pipeline), buildSpecifications(actives),6, stopwords);
+
+        return info;
+    }
+
+    private Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
+        Map<String, Object> options = new HashMap<>();
+        for (Object o : pipeline.getProperties().keySet()) {
+            if (o instanceof String) {
+                options.put(o.toString(), pipeline.getProperties().getProperty(o.toString()));
+            }
+        }
+
+        return options;
     }
 
     @Override
@@ -288,7 +314,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
         semanticGraph.getRoots().forEach(root -> {
             String rootId = newSentence.getId() + root.beginPosition() + root.endPosition() + root.lemma();
-//            System.out.println("found root with id: " + rootId);
+            System.out.println("found root with id: " + rootId);
             TypedDependency typedDependency = new TypedDependency(rootId, rootId, "ROOT", null);
             newSentence.addTypedDependency(typedDependency);
         });
@@ -664,45 +690,69 @@ public class StanfordTextProcessor implements TextProcessor {
         //TODO add validation
         String name = (String) pipelineSpec.get("name");
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
+        List<String> specActive = new ArrayList<>();
+        List<String> stopwordsList;
 
         if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
             pipelineBuilder.tokenize();
+            specActive.add("tokenize");
         }
 
         if ((Boolean) pipelineSpec.getOrDefault("cleanxml", false)) {
             pipelineBuilder.cleanxml();
+            specActive.add("cleanxml");
         }
 
         if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
             pipelineBuilder.truecase();
+            specActive.add("truecase");
         }
 
         if ((Boolean) pipelineSpec.getOrDefault("dependency", false)) {
             pipelineBuilder.dependencies();
+            specActive.add("dependency");
         }
 
         String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
         boolean checkLemma = (boolean) pipelineSpec.getOrDefault("checkLemmaIsStopWord", false);
+        if (checkLemma) {
+            specActive.add("checkLemmaIsStopWord");
+        }
         if (stopWords.equalsIgnoreCase("default")) {
             pipelineBuilder.defaultStopWordAnnotator();
+            stopwordsList = PipelineBuilder.getDefaultStopwords();
         } else {
             pipelineBuilder.customStopWordAnnotator(stopWords, checkLemma);
+            stopwordsList = PipelineBuilder.getCustomStopwordsList(stopWords);
         }
 
         if ((Boolean) pipelineSpec.getOrDefault("sentiment", false)) {
             pipelineBuilder.extractSentiment();
+            specActive.add("sentiment");
         }
         if ((Boolean) pipelineSpec.getOrDefault("coref", false)) {
             pipelineBuilder.extractCoref();
+            specActive.add("coref");
         }
         if ((Boolean) pipelineSpec.getOrDefault("relations", false)) {
             pipelineBuilder.extractRelations();
+            specActive.add("relations");
         }
         Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4L);
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();
         pipelines.put(name, pipeline);
+        PipelineInfo pipelineInfo = new PipelineInfo(
+                name,
+                this.getClass().getName(),
+                getPipelineProperties(pipeline),
+                buildSpecifications(specActive),
+                Integer.valueOf(threadNumber.toString()),
+                stopwordsList
+        );
+
+        pipelineInfos.put(name, pipelineInfo);
     }
 
     @Override
@@ -711,6 +761,27 @@ public class StanfordTextProcessor implements TextProcessor {
             throw new RuntimeException("No pipeline found with name: " + name);
         }
         pipelines.remove(name);
+    }
+
+    @Override
+    public List<PipelineInfo> getPipelineInfos() {
+        List<PipelineInfo> list = new ArrayList<>();
+
+        for (String k : pipelines.keySet()) {
+            list.add(pipelineInfos.get(k));
+        }
+
+        return list;
+    }
+
+    private Map<String, Boolean> buildSpecifications(List<String> actives) {
+        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment");
+        Map<String, Boolean> specs = new HashMap<>();
+        all.forEach(s -> {
+            specs.put(s, actives.contains(s));
+        });
+
+        return specs;
     }
 
     @Override
