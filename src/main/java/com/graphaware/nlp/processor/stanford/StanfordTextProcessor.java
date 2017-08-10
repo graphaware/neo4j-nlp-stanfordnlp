@@ -88,8 +88,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(TOKENIZER, pipeline);
-        List<String> actives = Arrays.asList("tokenizer");
-        pipelineInfos.put(TOKENIZER, createPipelineInfo(TOKENIZER, pipeline, actives));
+        pipelineInfos.put(TOKENIZER, createPipelineInfo(TOKENIZER, pipeline, Arrays.asList("tokenize")));
     }
 
     private void createSentimentPipeline() {
