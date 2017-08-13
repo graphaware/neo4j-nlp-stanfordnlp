@@ -19,6 +19,8 @@ import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
 import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;
+import static org.junit.Assert.*;
+
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import java.util.HashMap;
@@ -26,10 +28,6 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.bouncycastle.jcajce.provider.digest.GOST3411;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
@@ -271,6 +269,17 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
         assertEquals("be", sentence.getTagOccurrence(5).getLemma());
+    }
+
+    @Test
+    public void testAnnotationWithOneThousandthDollar() {
+        String text = "monetary units of mill or one-thousandth of a dollar (symbol ₥)";
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        AnnotatedText annotatedText = textProcessor.annotateText(text, 1, "tokenizer", "en", false, null);
+
+        assertEquals(1, annotatedText.getSentences().size());
+        Sentence sentence = annotatedText.getSentences().get(0);
+        assertNotNull(sentence.getTagOccurrenceByTagValue("one-thousandth"));
     }
 
     @Test

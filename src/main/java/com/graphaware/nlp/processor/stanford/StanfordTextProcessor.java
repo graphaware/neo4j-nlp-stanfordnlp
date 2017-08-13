@@ -55,6 +55,10 @@ import org.slf4j.LoggerFactory;
 public class StanfordTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
+
+//    private static final String PUNCT_REGEX_PATTERN = "\\p{Punct}";
+    private static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
+
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
@@ -77,8 +81,7 @@ public class StanfordTextProcessor implements TextProcessor {
         createPhrasePipeline();
         createDependencyGraphPipeline();
 
-        String pattern = "\\p{Punct}";
-        patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
     }
 
     private void createTokenizerPipeline() {
@@ -242,8 +245,9 @@ public class StanfordTextProcessor implements TextProcessor {
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
-                        String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                    if (!checkPunctuation(token.get(CoreAnnotations.LemmaAnnotation.class))) {
+                    String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    System.out.println(tokenId);
+                    if (checkPunctuation(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             newTag.setNe(Arrays.asList(currToken.getNe()));
@@ -257,6 +261,8 @@ public class StanfordTextProcessor implements TextProcessor {
                         } else {
                             if (!currToken.getTokenIds().contains(tokenId)) {
                                 currToken.getTokenIds().add(tokenId);
+                            } else {
+                                // debug
                             }
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
@@ -293,6 +299,7 @@ public class StanfordTextProcessor implements TextProcessor {
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
                     }
+
                     return currentNe;
                 }).forEach((currentNe) -> {
             currToken.setNe(currentNe);
@@ -468,6 +475,9 @@ public class StanfordTextProcessor implements TextProcessor {
     @Override
     public boolean checkPunctuation(String value) {
         Matcher match = patternCheck.matcher(value);
+
+        boolean found = patternCheck.matcher(value).find();
+
         return !match.find();
     }
 
@@ -796,4 +806,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return currTokenTokenIds;
     }
 
+    public static String getPunctRegexPattern() {
+        return PUNCT_REGEX_PATTERN;
+    }
 }
