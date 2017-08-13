@@ -87,7 +87,8 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 //        testGetProceduresManagement();
 //        clean();
 //        testStopWords();
-        testTextRank();
+//        testTextRank();
+        testGetPipelineInfos();
         clean();
     }
 
@@ -534,6 +535,17 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                 }
             }
             assertTrue(found);
+            tx.success();
+        }
+    }
+
+    public void testGetPipelineInfos() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({textProcessor:'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'})");
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                System.out.println(result.next());
+            }
             tx.success();
         }
     }

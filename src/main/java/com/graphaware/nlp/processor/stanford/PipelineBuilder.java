@@ -1,6 +1,10 @@
 package com.graphaware.nlp.processor.stanford;
 
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 class PipelineBuilder {
@@ -118,5 +122,30 @@ class PipelineBuilder {
         properties.setProperty("threads", String.valueOf(threadsNumber));
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
         return pipeline;
+    }
+
+    public static List<String> getDefaultStopwords() {
+        List<String> stopwords = new ArrayList<>();
+        Arrays.stream(CUSTOM_STOP_WORD_LIST.split(",")).forEach(s -> {
+            stopwords.add(s.trim());
+        });
+
+        return stopwords;
+    }
+
+    public static List<String> getCustomStopwordsList(String customStopWordList) {
+        String stopWordList;
+        if (customStopWordList.startsWith("+")) {
+            stopWordList = CUSTOM_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+        } else {
+            stopWordList = customStopWordList;
+        }
+
+        List<String> list = new ArrayList<>();
+        Arrays.stream(stopWordList.split(",")).forEach(s -> {
+            list.add(s.trim());
+        });
+
+        return list;
     }
 }
