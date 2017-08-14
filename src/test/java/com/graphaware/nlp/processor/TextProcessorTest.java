@@ -289,4 +289,22 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
         peristence.persistOnGraph(annotateText, false);
     }
+    
+    //@Test
+    public void testIssueWithThe() {
+        String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
+        Map<String, Object> customPipeline = new HashMap<>();
+        customPipeline.put("textProcessor", "com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        customPipeline.put("name", "less_stopwords");
+        customPipeline.put("stopWords", "start,starts,period,periods,a,an,and,are,as,at,but,by,for,if,into,is,it,o,on,or,such,that,then,there,these,this,to,will,with");
+        customPipeline.put("dependency", true);
+        customPipeline.put("tokenize", true);
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        textProcessor.createPipeline(customPipeline);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, 1, "less_stopwords", "en", false, null);
+
+        assertEquals(1, annotatedText.getSentences().size());
+        Sentence sentence = annotatedText.getSentences().get(0);
+        assertEquals("be", sentence.getTagOccurrence(5).getLemma());
+    }
 }

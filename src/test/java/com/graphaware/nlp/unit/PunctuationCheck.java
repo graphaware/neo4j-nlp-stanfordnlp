@@ -17,6 +17,7 @@ public class PunctuationCheck {
         assertTrue(isPassingPunctCheck("hello"));
         assertTrue(isPassingPunctCheck("be"));
         assertTrue(isPassingPunctCheck("monetary"));
+        assertTrue(isPassingPunctCheck("circuit"));
 
         assertFalse(isPassingPunctCheck("("));
         assertFalse(isPassingPunctCheck("-"));
