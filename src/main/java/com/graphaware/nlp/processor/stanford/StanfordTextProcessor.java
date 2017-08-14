@@ -17,7 +17,7 @@ package com.graphaware.nlp.processor.stanford;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
-import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -45,19 +45,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NLPTextProcessor(name = "StanfordTextProcessor")
-public class StanfordTextProcessor implements TextProcessor {
+public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
 
-//    private static final String PUNCT_REGEX_PATTERN = "\\p{Punct}";
-    private static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
@@ -69,19 +66,17 @@ public class StanfordTextProcessor implements TextProcessor {
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
     private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
-    private final Pattern patternCheck;
 
     private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
     public StanfordTextProcessor() {
+        super();
         //Creating default pipeline
         createTokenizerPipeline();
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
         createPhrasePipeline();
         createDependencyGraphPipeline();
-
-        patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
     }
 
     private void createTokenizerPipeline() {
@@ -468,15 +463,6 @@ public class StanfordTextProcessor implements TextProcessor {
         tag.setNe(Arrays.asList(ne));
         LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
         return tag;
-    }
-
-    @Override
-    public boolean checkLemmaIsValid(String value) {
-        Matcher match = patternCheck.matcher(value);
-
-        //boolean found = patternCheck.matcher(value).find();
-
-        return match.find();
     }
 
     private Set<PhraseHolder> inspectSubTree(Tree subTree) {
