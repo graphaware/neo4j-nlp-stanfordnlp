@@ -1,7 +1,6 @@
 package com.graphaware.nlp.unit;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -13,7 +12,6 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import java.util.*;
@@ -52,8 +50,6 @@ public class DependencyParserTest {
         String text = "Donald Trump flew yesterday to New York City";
 
         AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.TOKENIZER, "en", false, Collections.EMPTY_MAP);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValueAsString(at);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -129,7 +125,5 @@ public class DependencyParserTest {
         String text = "Donald Trump flew yesterday to New York City";
 
         AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.TOKENIZER, "en", false, Collections.EMPTY_MAP);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValueAsString(at);
     }
 }
