@@ -320,7 +320,6 @@ public class StanfordTextProcessor implements TextProcessor {
 
         semanticGraph.getRoots().forEach(root -> {
             String rootId = newSentence.getId() + root.beginPosition() + root.endPosition() + root.lemma();
-            System.out.println("found root with id: " + rootId);
             TypedDependency typedDependency = new TypedDependency(rootId, rootId, "ROOT", null);
             newSentence.addTypedDependency(typedDependency);
         });
@@ -328,7 +327,6 @@ public class StanfordTextProcessor implements TextProcessor {
         for (SemanticGraphEdge edge : semanticGraph.edgeListSorted()) {
             String sourceId = newSentence.getId() + edge.getSource().beginPosition() + edge.getSource().endPosition() + edge.getSource().lemma();
             String targetId = newSentence.getId() + edge.getTarget().beginPosition() + edge.getTarget().endPosition() + edge.getTarget().lemma();
-//            System.out.println(String.format("source : %s target : %s", sourceId, targetId));
             TypedDependency typedDependency = new TypedDependency(sourceId, targetId, edge.getRelation().getShortName(), edge.getRelation().getSpecific());
             newSentence.addTypedDependency(typedDependency);
         }
