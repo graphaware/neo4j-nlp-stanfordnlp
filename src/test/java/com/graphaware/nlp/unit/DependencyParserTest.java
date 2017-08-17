@@ -49,7 +49,7 @@ public class DependencyParserTest {
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
         String text = "Donald Trump flew yesterday to New York City";
 
-        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.TOKENIZER, "en", false, Collections.EMPTY_MAP);
+        AnnotatedText at = textProcessor.annotateText(text, StanfordTextProcessor.TOKENIZER, "en", Collections.EMPTY_MAP);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -72,7 +72,7 @@ public class DependencyParserTest {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
-        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.DEPENDENCY_GRAPH, "en", false, Collections.EMPTY_MAP);
+        AnnotatedText at = textProcessor.annotateText(text, StanfordTextProcessor.DEPENDENCY_GRAPH, "en", Collections.EMPTY_MAP);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -98,9 +98,9 @@ public class DependencyParserTest {
         customPipeline.put("name", "custom");
         customPipeline.put("stopWords", "start,starts");
         customPipeline.put("dependency", true);
-        ((StanfordTextProcessor) textProcessor).createPipeline(customPipeline);
+//        ((StanfordTextProcessor) textProcessor).createPipeline(customPipeline);
 
-        textProcessor.annotateText(text, "id", "custom", "en", false, Collections.EMPTY_MAP);
+        textProcessor.annotateText(text, "custom", "en", Collections.EMPTY_MAP);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -124,6 +124,6 @@ public class DependencyParserTest {
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
         String text = "Donald Trump flew yesterday to New York City";
 
-        AnnotatedText at = textProcessor.annotateText(text, "id", StanfordTextProcessor.TOKENIZER, "en", false, Collections.EMPTY_MAP);
+        AnnotatedText at = textProcessor.annotateText(text, StanfordTextProcessor.TOKENIZER, "en", Collections.EMPTY_MAP);
     }
 }

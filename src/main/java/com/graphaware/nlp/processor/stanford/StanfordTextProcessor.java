@@ -17,6 +17,8 @@ package com.graphaware.nlp.processor.stanford;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.processor.PipelineInfo;
+import com.graphaware.nlp.processor.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
@@ -158,28 +160,6 @@ public class StanfordTextProcessor implements TextProcessor {
         return options;
     }
 
-    @Override
-    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store) {
-        String pipeline;
-        switch (level) {
-            case 0:
-                pipeline = TOKENIZER;
-                break;
-            case 1:
-                pipeline = TOKENIZER_AND_SENTIMENT;
-                break;
-            case 2:
-                pipeline = PHRASE;
-                break;
-            case 3:
-                pipeline = DEPENDENCY_GRAPH;
-                break;
-            default:
-                pipeline = TOKENIZER;
-        }
-        return annotateText(text, id, pipeline, lang, store, null);
-    }
-
     public StanfordCoreNLP getPipeline(String name) {
         if (name == null || name.isEmpty()) {
             name = TOKENIZER;
@@ -194,11 +174,11 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
+    public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters) {
 
-        AnnotatedText result = new AnnotatedText(id);
+        AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
-        StanfordCoreNLP pipeline = getPipeline(name);
+        StanfordCoreNLP pipeline = getPipeline(pipelineName);
 
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -207,8 +187,7 @@ public class StanfordTextProcessor implements TextProcessor {
             return sentence;
         }).forEach((sentence) -> {
             int sentenceNumber = sentenceSequence.getAndIncrement();
-            String sentenceId = id + "_" + sentenceNumber;
-            final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
+            final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
             extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
             extractPhrases(sentence, newSentence);
@@ -246,7 +225,6 @@ public class StanfordTextProcessor implements TextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                    System.out.println(tokenId);
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
@@ -693,35 +671,35 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public void createPipeline(Map<String, Object> pipelineSpec) {
-        //TODO add validation
-        String name = (String) pipelineSpec.get("name");
+    public void createPipeline(PipelineSpecification pipelineSpecification) {
+        //@todo create constants for processing steps
+        String name = pipelineSpecification.getName();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
         List<String> specActive = new ArrayList<>();
         List<String> stopwordsList;
 
-        if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
+        if (pipelineSpecification.hasProcessingStep("tokenize", true)) {
             pipelineBuilder.tokenize();
             specActive.add("tokenize");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("cleanxml", false)) {
+        if (pipelineSpecification.hasProcessingStep("cleanxml")) {
             pipelineBuilder.cleanxml();
             specActive.add("cleanxml");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
+        if (pipelineSpecification.hasProcessingStep("truecase")) {
             pipelineBuilder.truecase();
             specActive.add("truecase");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("dependency", false)) {
+        if (pipelineSpecification.hasProcessingStep("dependency")) {
             pipelineBuilder.dependencies();
             specActive.add("dependency");
         }
 
-        String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
-        boolean checkLemma = (boolean) pipelineSpec.getOrDefault("checkLemmaIsStopWord", false);
+        String stopWords = pipelineSpecification.getStopwords() != null ? pipelineSpecification.getStopwords() : "default";
+        boolean checkLemma = pipelineSpecification.hasProcessingStep("checkLemmaIsStopWord");
         if (checkLemma) {
             specActive.add("checkLemmaIsStopWord");
         }
@@ -733,19 +711,19 @@ public class StanfordTextProcessor implements TextProcessor {
             stopwordsList = PipelineBuilder.getCustomStopwordsList(stopWords);
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("sentiment", false)) {
+        if (pipelineSpecification.hasProcessingStep("sentiment")) {
             pipelineBuilder.extractSentiment();
             specActive.add("sentiment");
         }
-        if ((Boolean) pipelineSpec.getOrDefault("coref", false)) {
+        if (pipelineSpecification.hasProcessingStep("coref")) {
             pipelineBuilder.extractCoref();
             specActive.add("coref");
         }
-        if ((Boolean) pipelineSpec.getOrDefault("relations", false)) {
+        if (pipelineSpecification.hasProcessingStep("relations")) {
             pipelineBuilder.extractRelations();
             specActive.add("relations");
         }
-        Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4L);
+        Long threadNumber = pipelineSpecification.getThreadNumber() != 0 ? pipelineSpecification.getThreadNumber() : 4L;
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();
