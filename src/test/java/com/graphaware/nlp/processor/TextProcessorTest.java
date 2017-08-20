@@ -15,37 +15,32 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.domain.*;
 
-import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;
-import static org.junit.Assert.*;
-
-import com.graphaware.nlp.module.NLPConfiguration;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
-import com.graphaware.nlp.util.ServiceLoader;
-import com.graphaware.nlp.util.TestNLPGraph;
-import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import com.graphaware.nlp.util.TestAnnotatedText;
 
 import java.util.*;
 
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.neo4j.graphdb.*;
 
-public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
+import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;
+import static org.junit.Assert.*;
+import static com.graphaware.nlp.util.TagUtils.newTag;
 
-    private NLPManager manager;
+public class TextProcessorTest {
 
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        this.manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
+    private static TextProcessor textProcessor;
+
+    @BeforeClass
+    public static void init() {
+        textProcessor = new StanfordTextProcessor();
     }
 
     @Test
     public void testAnnotatedText() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotatedText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
@@ -58,62 +53,48 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "was too close to call. It was not, and despite his being in Pakistan, "
                 + "the outcome of the election was exactly as we predicted.", "tokenizer", "en", null);
 
-        assertEquals(4, annotatedText.getSentences().size());
-        assertEquals(15, annotatedText.getSentences().get(0).getTags().size());
-        assertEquals(11, annotatedText.getSentences().get(1).getTags().size());
-        assertEquals(24, annotatedText.getSentences().get(2).getTags().size());
-        assertEquals(9, annotatedText.getSentences().get(3).getTags().size());
+        TestAnnotatedText test = new TestAnnotatedText(annotatedText);
+        test.assertSentencesCount(4);
+        test.assertTagsCountInSentence(15, 0);
+        test.assertTagsCountInSentence(11, 1);
+        test.assertTagsCountInSentence(24, 2);
+        test.assertTagsCountInSentence(9, 3);
 
-        persistAnnotatedText(annotatedText, "test-1");
-        TestNLPGraph tester = new TestNLPGraph(getDatabase());
-        tester.assertTagWithValueHasNERLabel("Pakistan", "NER_Location");
-        tester.assertTagWithValueHasNE("Pakistan", "LOCATION");
-        tester.assertTagWithValueHasPos("show", "VBZ");
+        test.assertTag(newTag("Pakistan", Collections.singletonList("LOCATION"), Collections.emptyList()));
+        test.assertTag(newTag("show", Collections.emptyList(), Collections.singletonList("VBZ")));
     }
     
     @Test
     public void testLemmaLowerCasing() {
         String testText = "Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset";
-        
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        AnnotatedText annotateText = textProcessor.annotateText(testText, TOKENIZER, "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(testText, TOKENIZER, "en", null);
+        TestAnnotatedText test = new TestAnnotatedText(annotatedText);
 
-        assertEquals(1, annotateText.getSentences().size());
-        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        test.assertSentencesCount(1);
+        assertEquals("governance", test.getTagOccurrenceAtPosition(0, 16).getLemma());
 
         PipelineSpecification pipelineSpecification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
         pipelineSpecification.addProcessingStep("truecase");
         textProcessor.createPipeline(pipelineSpecification);
-        
-        annotateText = textProcessor.annotateText(testText, "tokenizeWithTrueCase", "en", null);
+        annotatedText = textProcessor.annotateText(testText, "tokenizeWithTrueCase", "en", null);
 
-        assertEquals(1, annotateText.getSentences().size());
-        assertEquals("governance", annotateText.getSentences().get(0).getTagOccurrence(16).getLemma());
+        test = new TestAnnotatedText(annotatedText);
+        test.assertSentencesCount(1);
+        assertEquals("governance", test.getTagOccurrenceAtPosition(0, 16).getLemma());
         
     }
     
     @Test
     public void testLemmaSprittingByPunctuation() {
         String testText = "Ser Emmon Cuy, Ser Robar Royce, Ser Parmen Crane, they'd sworn as well.";
-        
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotateText = textProcessor.annotateText(testText, TOKENIZER, "en", null);
 
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(6, annotateText.getSentences().get(0).getTags().size());
     }
 
-    private ResourceIterator<Object> getTagsIterator(String value) throws QueryExecutionException {
-        Map<String, Object> params = new HashMap<>();
-        params.put("value", value);
-        Result pakistan = getDatabase().execute("MATCH (n:Tag {value: {value}}) return n", params);
-        ResourceIterator<Object> rowIterator = pakistan.columnAs("n");
-        return rowIterator;
-    }
-
     @Test
     public void testAnnotatedTag() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         Tag annotateTag = textProcessor.annotateTag("winners", "en");
         assertEquals(annotateTag.getLemma(), "winner");
     }
@@ -145,34 +126,33 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         }*/
     }
 
-//    @Test
-//    public void testSentiment() {
-//        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+    @Test
+    public void testSentiment() {
+        //@todo @alenegro81 check why failing and what is the logic behind the values
 //
-//        AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", 1, 1, "en", false);
+//        AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", "tokenizer", "en", null);
 //        assertEquals(1, annotateText.getSentences().size());
 //        assertEquals(0, annotateText.getSentences().get(0).getSentiment());
 //
-//        annotateText = textProcessor.annotateText("It was really horrible to study at Stanford", 1, 1, "en", false);
+//        annotateText = textProcessor.annotateText("It was really horrible to study at Stanford", "tokenizer", "en", null);
 //        assertEquals(1, annotateText.getSentences().size());
 //        assertEquals(1, annotateText.getSentences().get(0).getSentiment());
 //
-//        annotateText = textProcessor.annotateText("I studied at Stanford", 1, 1, "en", false);
+//        annotateText = textProcessor.annotateText("I studied at Stanford", "tokenizer", "en", null);
 //        assertEquals(1, annotateText.getSentences().size());
 //        assertEquals(2, annotateText.getSentences().get(0).getSentiment());
 //
-//        annotateText = textProcessor.annotateText("I liked to study at Stanford", 1, 1, "en", false);
+//        annotateText = textProcessor.annotateText("I liked to study at Stanford", "tokenizer", "en", null);
 //        assertEquals(1, annotateText.getSentences().size());
 //        assertEquals(3, annotateText.getSentences().get(0).getSentiment());
 //
-//        annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1, 1, "en", false);
+//        annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", "tokenizer", "en", null);
 //        assertEquals(1, annotateText.getSentences().size());
 //        assertEquals(4, annotateText.getSentences().get(0).getSentiment());
-//    }
+    }
     
     @Test
     public void testAnnotatedTextWithPosition() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         PipelineSpecification specification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("truecase");
         specification.addProcessingStep("sentiment");
@@ -216,19 +196,16 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     
     @Test
     public void testAnnotatedShortText() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        AnnotatedText annotateText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", "tokenizer", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", "tokenizer", "en", null);
 
-        assertEquals(1, annotateText.getSentences().size());
-        persistAnnotatedText(annotateText, "test-10");
-        TestNLPGraph tester = new TestNLPGraph(getDatabase());
-        tester.assertSentenceNodesCount(1);
-        tester.assertTagNodesCount(5);
+        assertEquals(1, annotatedText.getSentences().size());
+        TestAnnotatedText test = new TestAnnotatedText(annotatedText);
+        test.assertSentencesCount(1);
+        test.assertTagsCountInSentence(5, 0);
     }
     
     @Test
     public void testAnnotatedShortText2() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", "tokenizer", "en", null);
         assertEquals(1, annotateText.getSentences().size());
     }
@@ -239,7 +216,6 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopwords("start, starts");
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
@@ -251,7 +227,6 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testWithOneThousandthDollar() {
         String text = "monetary units of mill or one-thousandth of a dollar (symbol ₥)";
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotatedText = textProcessor.annotateText(text, "tokenizer", "en", null);
 
         assertEquals(1, annotatedText.getSentences().size());
@@ -265,48 +240,32 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopwords("start, starts");
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
-        Sentence sentence = annotatedText.getSentences().get(0);
-        Tag theTag = sentence.getTag("the");
-        assertEquals("the", theTag.getLemma());
-        assertFalse(theTag.getNeAsList().contains("Date"));
-
-        persistAnnotatedText(annotatedText, "test-15");
-        TestNLPGraph tester = new TestNLPGraph(getDatabase());
-        tester.executeInTransaction("MATCH (n:Tag) WHERE n.value = 'the' RETURN n", (result -> {
-            assertFalse( ((Node) result.next().get("n")).hasLabel(Label.label("NER_Date")));
-        }));
+        TestAnnotatedText test = new TestAnnotatedText(annotatedText);
+        test.assertTagWithLemma("the");
+        test.assertNotTag(newTag("the", Collections.singletonList("DATE"), Collections.emptyList()));
     }
 
     @Test
-    public void testTypedDependenciesAreFoundAndStored() {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+    public void testTypedDependenciesAreFound() {
         AnnotatedText annotatedText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", "tokenizer", "en", null);
+        // @todo add some test here
 
     }
     
     @Test
-    public void testIssueWithThe() {
+    public void testIssueWithBe() {
         String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopwords("start,starts");
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
         assertEquals("be", sentence.getTagOccurrence(49).getLemma());
-    }
-
-    private void persistAnnotatedText(AnnotatedText annotatedText, String id) {
-        try (Transaction tx = getDatabase().beginTx()) {
-            manager.persistAnnotatedText(annotatedText, id, false);
-            tx.success();
-        }
     }
 }

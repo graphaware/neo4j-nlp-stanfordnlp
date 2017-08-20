@@ -18,7 +18,7 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.processor.PipelineInfo;
-import com.graphaware.nlp.processor.PipelineSpecification;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
