@@ -22,9 +22,14 @@ import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
+import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
+import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
+import edu.stanford.nlp.naturalli.OpenIE;
+import edu.stanford.nlp.naturalli.RelationTripleSegmenter;
+import edu.stanford.nlp.naturalli.SentenceFragment;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -38,14 +43,8 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -172,6 +171,8 @@ public class StanfordTextProcessor implements TextProcessor {
 
         return pipeline;
     }
+
+
 
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters) {
@@ -346,12 +347,12 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams) {
+    public AnnotatedText sentiment(AnnotatedText annotatedText) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
         if (pipeline == null) {
             throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
         }
-        annotated.getSentences().parallelStream().forEach((item) -> {
+        annotatedText.getSentences().parallelStream().forEach((item) -> {
             Annotation document = new Annotation(item.getSentence());
             pipeline.annotate(document);
             List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -360,7 +361,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 extractSentiment(sentence.get(), item);
             }
         });
-        return annotated;
+        return annotatedText;
     }
 
     private int extractSentiment(CoreMap sentence) {

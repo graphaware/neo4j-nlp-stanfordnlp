@@ -23,6 +23,7 @@ import com.graphaware.nlp.util.TestAnnotatedText;
 
 import java.util.*;
 
+import edu.stanford.nlp.naturalli.RelationTripleSegmenter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
