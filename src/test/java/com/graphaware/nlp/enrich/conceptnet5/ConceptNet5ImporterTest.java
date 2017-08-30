@@ -39,7 +39,7 @@ public class ConceptNet5ImporterTest {
         ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.conceptnet.io").build();
         String lang = "en";
         Tag source = textProcessor.annotateTag("circuit", lang);
-        List<Tag> result = instance.importHierarchy(source, lang, true, 2, textProcessor, Arrays.asList("IsA"), Arrays.asList("NN"));
+        List<Tag> result = instance.importHierarchy(source, lang, true, 2, textProcessor, Arrays.asList("IsA"), Arrays.asList("NN"), 50);
         assertEquals(4, result.size());
         //assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.

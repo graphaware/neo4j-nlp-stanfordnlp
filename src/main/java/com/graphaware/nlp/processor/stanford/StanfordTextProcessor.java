@@ -57,7 +57,6 @@ public class StanfordTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
 
-//    private static final String PUNCT_REGEX_PATTERN = "\\p{Punct}";
     private static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
 
     public static final String TOKENIZER = "tokenizer";
@@ -70,19 +69,20 @@ public class StanfordTextProcessor implements TextProcessor {
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
     private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
-    private final Pattern patternCheck;
+    private final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
 
     private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
     public StanfordTextProcessor() {
-        //Creating default pipeline
+        createCorePipelines();
+    }
+
+    protected void createCorePipelines() {
         createTokenizerPipeline();
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
         createPhrasePipeline();
         createDependencyGraphPipeline();
-
-        patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
     }
 
     private void createTokenizerPipeline() {
@@ -291,7 +291,7 @@ public class StanfordTextProcessor implements TextProcessor {
         }
     }
 
-    private void extractDependencies(CoreMap sentence, final Sentence newSentence) {
+    protected void extractDependencies(CoreMap sentence, final Sentence newSentence) {
         SemanticGraph semanticGraph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
         if (semanticGraph == null) {
             return;
@@ -311,7 +311,7 @@ public class StanfordTextProcessor implements TextProcessor {
         }
     }
 
-    private void extractRelationship(AnnotatedText annotatedText, List<CoreMap> sentences, Annotation document) {
+    protected void extractRelationship(AnnotatedText annotatedText, List<CoreMap> sentences, Annotation document) {
         Map<Integer, CorefChain> corefChains = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
         if (corefChains != null) {
             for (CorefChain chain : corefChains.values()) {
@@ -364,7 +364,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return annotatedText;
     }
 
-    private int extractSentiment(CoreMap sentence) {
+    protected int extractSentiment(CoreMap sentence) {
         Tree tree = sentence
                 .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
         if (tree == null) {
@@ -421,7 +421,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return null;
     }
 
-    private Tag getTag(String lang, CoreLabel token) {
+    protected Tag getTag(String lang, CoreLabel token) {
         Pair<Boolean, Boolean> stopword = token.get(StopwordAnnotator.class);
         if (stopword != null && (stopword.first() || stopword.second())) {
             return null;
@@ -458,7 +458,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return match.find();
     }
 
-    private Set<PhraseHolder> inspectSubTree(Tree subTree) {
+    protected Set<PhraseHolder> inspectSubTree(Tree subTree) {
         Set<PhraseHolder> result = new TreeSet<>();
         if (subTree.value().equalsIgnoreCase("NP") || subTree.value().equalsIgnoreCase("NP-TMP")) {// set your rule of defining Phrase here
             PhraseHolder pHolder = new PhraseHolder();
@@ -775,7 +775,7 @@ public class StanfordTextProcessor implements TextProcessor {
         throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
     }
 
-    private List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
+    protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
         if (currTokenTokenIds.isEmpty()) {
             return Arrays.asList(tokenId);
         }
