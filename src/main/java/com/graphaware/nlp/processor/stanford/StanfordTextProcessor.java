@@ -68,13 +68,32 @@ public class StanfordTextProcessor implements TextProcessor {
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
-    private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
-    private final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
+    protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
+    protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
 
-    private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
+    protected final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
-    public StanfordTextProcessor() {
+    protected boolean initiated = false;
+
+    @Override
+    public void init() {
+
+        if (initiated) {
+            return;
+        }
+
         createCorePipelines();
+        initiated = true;
+    }
+
+    @Override
+    public String getAlias() {
+        return "stanford";
+    }
+
+    @Override
+    public String override() {
+        return null;
     }
 
     protected void createCorePipelines() {
@@ -141,7 +160,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
     }
 
-    private PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
+    protected PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
         List<String> stopwords = PipelineBuilder.getDefaultStopwords();
         PipelineInfo info = new PipelineInfo(name, this.getClass().getName(), getPipelineProperties(pipeline), buildSpecifications(actives),6, stopwords);
 

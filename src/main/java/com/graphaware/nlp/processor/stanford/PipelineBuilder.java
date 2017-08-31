@@ -7,15 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-class PipelineBuilder {
+public class PipelineBuilder {
 
-    private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
+    protected static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 //private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,but,by,for,if,in,into,it,no,o,on,or,such,that,their,then,there,these,they,this,to,will,with";
-    private final Properties properties = new Properties();
-    private final StringBuilder annotators = new StringBuilder(); //basics annotators
-    private int threadsNumber = 4;
+    protected final Properties properties = new Properties();
+    protected final StringBuilder annotators = new StringBuilder(); //basics annotators
+    protected int threadsNumber = 4;
     
-    private final String name;
+    protected final String name;
 
     public PipelineBuilder(String name) {
         this.name = name;
@@ -47,7 +47,7 @@ class PipelineBuilder {
         return this;
     }
 
-    private void checkForExistingAnnotators() {
+    protected void checkForExistingAnnotators() {
         if (annotators.toString().length() > 0) {
             annotators.append(", ");
         }
