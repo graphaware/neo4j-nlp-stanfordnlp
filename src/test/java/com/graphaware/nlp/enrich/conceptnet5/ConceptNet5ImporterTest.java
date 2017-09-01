@@ -35,6 +35,7 @@ public class ConceptNet5ImporterTest {
     @Test
     public void testImportHierarchy() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor(TEXT_PROCESSOR);
+        textProcessor.init();
         //ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
         ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.conceptnet.io").build();
         String lang = "en";

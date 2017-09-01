@@ -1,6 +1,7 @@
 package com.graphaware.nlp.unit;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -12,11 +13,21 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.*;
 
 public class DependencyParserTest {
+
+    private static TextProcessor textProcessor;
+
+    @BeforeClass
+    public static void setUp() {
+        textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        textProcessor.init();
+    }
 
     @Test
     public void testStanfordTypedDependenciesParsing() {
@@ -45,7 +56,6 @@ public class DependencyParserTest {
 
     @Test
     public void testStanfordNLPWithPredefinedProcessors() throws Exception {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
         String text = "Donald Trump flew yesterday to New York City";
 
@@ -69,7 +79,6 @@ public class DependencyParserTest {
     @Test
     public void testEnhancedDependencyParsingWithComplexTest() throws Exception {
         String text = "Softfoot and Small Paul would kill the Old Beard, Dirk would do Blane, and Lark and his cousins would silence Bannen and old Dywen, to keep them from sniffing after their trail.";
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
         AnnotatedText at = textProcessor.annotateText(text, StanfordTextProcessor.DEPENDENCY_GRAPH, "en", Collections.EMPTY_MAP);
@@ -90,15 +99,15 @@ public class DependencyParserTest {
     @Test
     public void testEnhancedDependencyParsingWithQuestion() throws Exception {
         String text = "In what area was Frederic born in";
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
         Map<String, Object> customPipeline = new HashMap<>();
         customPipeline.put("textProcessor", "com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         customPipeline.put("name", "custom");
         customPipeline.put("stopWords", "start,starts");
-        customPipeline.put("dependency", true);
-//        ((StanfordTextProcessor) textProcessor).createPipeline(customPipeline);
+        customPipeline.put("processingSteps", Collections.singletonMap("dependency", true));
+        PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(customPipeline);
+        ((StanfordTextProcessor) textProcessor).createPipeline(pipelineSpecification);
 
         textProcessor.annotateText(text, "custom", "en", Collections.EMPTY_MAP);
 
@@ -120,7 +129,6 @@ public class DependencyParserTest {
 
     @Test
     public void testTagMerging() throws Exception {
-        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
         String text = "Donald Trump flew yesterday to New York City";
 

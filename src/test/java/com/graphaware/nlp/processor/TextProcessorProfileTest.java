@@ -23,6 +23,7 @@ public class TextProcessorProfileTest {
     @Test
     public void testAnnotatedText() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        textProcessor.init();
         textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "

@@ -37,6 +37,7 @@ public class TextProcessorTest {
     @BeforeClass
     public static void init() {
         textProcessor = new StanfordTextProcessor();
+        textProcessor.init();
     }
 
     @Test
