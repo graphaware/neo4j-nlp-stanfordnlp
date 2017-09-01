@@ -17,19 +17,15 @@ package com.graphaware.nlp.processor.stanford;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
-import edu.stanford.nlp.ie.util.RelationTriple;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
-import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
-import edu.stanford.nlp.naturalli.OpenIE;
-import edu.stanford.nlp.naturalli.RelationTripleSegmenter;
-import edu.stanford.nlp.naturalli.SentenceFragment;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -49,6 +45,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,9 +201,7 @@ public class StanfordTextProcessor implements TextProcessor {
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
-        sentences.stream().map((sentence) -> {
-            return sentence;
-        }).forEach((sentence) -> {
+        sentences.forEach((sentence) -> {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
             extractTokens(lang, sentence, newSentence);
@@ -213,7 +209,6 @@ public class StanfordTextProcessor implements TextProcessor {
             extractPhrases(sentence, newSentence);
             extractDependencies(sentence, newSentence);
             result.addSentence(newSentence);
-//            newSentence.debugTagOccurenceTokenIds();
         });
         extractRelationship(result, sentences, document);
         return result;
@@ -718,7 +713,7 @@ public class StanfordTextProcessor implements TextProcessor {
             specActive.add("dependency");
         }
 
-        String stopWords = pipelineSpecification.getStopwords() != null ? pipelineSpecification.getStopwords() : "default";
+        String stopWords = pipelineSpecification.getStopWords() != null ? pipelineSpecification.getStopWords() : "default";
         boolean checkLemma = pipelineSpecification.hasProcessingStep("checkLemmaIsStopWord");
         if (checkLemma) {
             specActive.add("checkLemmaIsStopWord");

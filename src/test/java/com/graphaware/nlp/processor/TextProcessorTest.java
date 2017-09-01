@@ -23,7 +23,6 @@ import com.graphaware.nlp.util.TestAnnotatedText;
 
 import java.util.*;
 
-import edu.stanford.nlp.naturalli.RelationTripleSegmenter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -216,7 +215,7 @@ public class TextProcessorTest {
         String text = "What is in front of the Notre Dame Main Building?";
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
-        specification.setStopwords("start, starts");
+        specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
@@ -240,7 +239,7 @@ public class TextProcessorTest {
         String text = "In addition to the dollar the coinage act officially established monetary units of mill or one-thousandth of a dollar (symbol ₥), cent or one-hundredth of a dollar (symbol ¢), dime or one-tenth of a dollar, and eagle or ten dollars, with prescribed weights and composition of gold, silver, or copper for each.";
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
-        specification.setStopwords("start, starts");
+        specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
@@ -261,7 +260,7 @@ public class TextProcessorTest {
         String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
         PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
-        specification.setStopwords("start,starts");
+        specification.setStopWords("start,starts");
         textProcessor.createPipeline(specification);
         AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
 
