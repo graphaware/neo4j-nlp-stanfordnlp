@@ -165,7 +165,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return info;
     }
 
-    private Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
+    protected Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
         Map<String, Object> options = new HashMap<>();
         for (Object o : pipeline.getProperties().keySet()) {
             if (o instanceof String) {
@@ -774,7 +774,7 @@ public class StanfordTextProcessor implements TextProcessor {
         return list;
     }
 
-    private Map<String, Boolean> buildSpecifications(List<String> actives) {
+    protected Map<String, Boolean> buildSpecifications(List<String> actives) {
         List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment");
         Map<String, Boolean> specs = new HashMap<>();
         all.forEach(s -> {
