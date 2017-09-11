@@ -143,7 +143,7 @@ public class StanfordTextProcessor implements TextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(PHRASE, pipeline);
-        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment")));
+        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment", PHRASE)));
     }
 
     private void createDependencyGraphPipeline() {
@@ -206,7 +206,7 @@ public class StanfordTextProcessor implements TextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
             extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
-            extractPhrases(sentence, newSentence);
+            extractPhrases(sentence, newSentence, pipelineName);
             extractDependencies(sentence, newSentence);
             result.addSentence(newSentence);
         });
@@ -223,6 +223,21 @@ public class StanfordTextProcessor implements TextProcessor {
         extractedPhrases.stream().forEach((holder) -> {
             newSentence.addPhraseOccurrence(holder.getBeginPosition(), holder.getEndPosition(), new Phrase(holder.getPhrase()));
         });
+    }
+
+    protected void extractPhrases(CoreMap sentence, Sentence newSentence, String pipelineName) {
+        pipelineInfos.keySet().forEach(k -> {
+            System.out.println("k: " + k);
+            System.out.println(pipelineInfos.get(k).getSpecifications());
+        });
+        PipelineInfo pipelineInfo = pipelineInfos.get(pipelineName);
+        if (!pipelineInfo
+                .getSpecifications()
+                .get(PHRASE)) {
+            return;
+        }
+
+        extractPhrases(sentence, newSentence);
     }
 
     protected void extractSentiment(CoreMap sentence, final Sentence newSentence) {
@@ -775,7 +790,7 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     protected Map<String, Boolean> buildSpecifications(List<String> actives) {
-        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment");
+        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
         Map<String, Boolean> specs = new HashMap<>();
         all.forEach(s -> {
             specs.put(s, actives.contains(s));
