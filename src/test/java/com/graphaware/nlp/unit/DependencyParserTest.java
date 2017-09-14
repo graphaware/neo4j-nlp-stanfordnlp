@@ -1,7 +1,7 @@
 package com.graphaware.nlp.unit;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -13,7 +13,6 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

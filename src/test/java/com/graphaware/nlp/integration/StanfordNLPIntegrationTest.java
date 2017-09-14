@@ -1,7 +1,9 @@
 package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.processor.PipelineInfo;
+import com.graphaware.nlp.processor.TextProcessor;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
@@ -46,6 +48,23 @@ public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
         String text = "Neo4j is built from the ground up to be a graph database.";
         try (Transaction tx = getDatabase().beginTx()) {
             getNLPManager().annotateTextAndPersist(text, "test", "stanford", "customie", false, false);
+            tx.success();
+        }
+        executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {
+            assertFalse(result.hasNext());
+        }));
+    }
+
+    @Test
+    public void testAnnotationWithPipelineFromUserConfig() {
+        clearDb();
+        getNLPManager().getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:\"customie\", stopWords:\"hello,build\", textProcessor:\"stanford\", processingSteps:{tokenize:true, dependency:true, coref: true}})", (result -> {
+            assertTrue(result.hasNext());
+        }));
+        String text = "Neo4j is built from the ground up to be a graph database.";
+        try (Transaction tx = getDatabase().beginTx()) {
+            getNLPManager().annotateTextAndPersist(text, "test", "stanford", null, false, false);
             tx.success();
         }
         executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {

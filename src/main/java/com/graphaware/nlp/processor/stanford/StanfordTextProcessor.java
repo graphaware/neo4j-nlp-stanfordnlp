@@ -17,9 +17,9 @@ package com.graphaware.nlp.processor.stanford;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
-import com.graphaware.nlp.persistence.persisters.Persister;
+import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.processor.PipelineInfo;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
@@ -33,6 +33,8 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+
+import static com.graphaware.nlp.processor.AbstractTextProcessor.PUNCT_REGEX_PATTERN;
 import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
@@ -43,19 +45,15 @@ import edu.stanford.nlp.util.StringUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @NLPTextProcessor(name = "StanfordTextProcessor")
-public class StanfordTextProcessor implements TextProcessor {
+public class StanfordTextProcessor extends AbstractTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
-
-    private static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
@@ -64,12 +62,9 @@ public class StanfordTextProcessor implements TextProcessor {
     public static final String PHRASE = "phrase";
     public static final String DEPENDENCY_GRAPH = "tokenizerAndDependency";
 
-    public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
+    protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
     protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
-    protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
-
-    protected final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
     protected boolean initiated = false;
 
@@ -196,6 +191,7 @@ public class StanfordTextProcessor implements TextProcessor {
 
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
+        System.out.println("Running annotation for pipeline " + pipelineName);
         StanfordCoreNLP pipeline = getPipeline(pipelineName);
 
         pipeline.annotate(document);
@@ -810,9 +806,5 @@ public class StanfordTextProcessor implements TextProcessor {
         }
 
         return currTokenTokenIds;
-    }
-
-    public static String getPunctRegexPattern() {
-        return PUNCT_REGEX_PATTERN;
     }
 }

@@ -17,7 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.*;
 
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestAnnotatedText;
 
