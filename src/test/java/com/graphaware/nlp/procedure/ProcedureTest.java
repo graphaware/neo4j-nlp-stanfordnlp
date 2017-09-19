@@ -88,7 +88,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 //        clean();
 //        testStopWords();
 //        testTextRank();
-        testGetPipelineInfos();
         clean();
     }
 
@@ -217,64 +216,65 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    public void testAnnotatedTextOnMultiple() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            String id = "id1";
-            Map<String, Object> params = new HashMap<>();
-            params.put("value", SHORT_TEXT_1);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_2);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_3);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_4);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_5);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_6);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_7);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_8);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_9);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            params.put("value", SHORT_TEXT_10);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            getDatabase().execute("MERGE (n:Tweet {id:1})", params);
-
-            //Test for filter based on language
-            params.put("value", TEXT_IT);
-            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-
-            Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
-                    + "WITH collect(a) AS aa\n"
-                    + "UNWIND aa AS a\n"
-                    + "CALL ga.nlp.annotate({text:a.text, id: id(a)}) YIELD result WITH result as at "
-                    + "MERGE (a)-[:HAS_ANNOTATED_TEXT]->(at) WITH at "
-                    + "MATCH (at)-[:CONTAINS_SENTENCE]->(result) "
-                    + "RETURN result", params);
-            ResourceIterator<Object> rowIterator = sentences.columnAs("result");
-            assertTrue(rowIterator.hasNext());
-            int i = 0;
-            while (rowIterator.hasNext()) {
-                rowIterator.next();
-                i++;
-            }
-            assertEquals(13, i);
-            tx.success();
-        }
-    }
+// THIS TEST HAS BEEN MOVED TO NEO4J-NLP BECAUSE IT IS NOT SPECIFIC TO STANFORD
+//    public void testAnnotatedTextOnMultiple() {
+//        try (Transaction tx = getDatabase().beginTx()) {
+//            String id = "id1";
+//            Map<String, Object> params = new HashMap<>();
+//            params.put("value", SHORT_TEXT_1);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_2);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_3);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_4);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_5);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_6);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_7);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_8);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_9);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            params.put("value", SHORT_TEXT_10);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            getDatabase().execute("MERGE (n:Tweet {id:1})", params);
+//
+//            //Test for filter based on language
+//            params.put("value", TEXT_IT);
+//            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+//
+//            Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
+//                    + "WITH collect(a) AS aa\n"
+//                    + "UNWIND aa AS a\n"
+//                    + "CALL ga.nlp.annotate({text:a.text, id: id(a)}) YIELD result WITH result as at "
+//                    + "MERGE (a)-[:HAS_ANNOTATED_TEXT]->(at) WITH at "
+//                    + "MATCH (at)-[:CONTAINS_SENTENCE]->(result) "
+//                    + "RETURN result", params);
+//            ResourceIterator<Object> rowIterator = sentences.columnAs("result");
+//            assertTrue(rowIterator.hasNext());
+//            int i = 0;
+//            while (rowIterator.hasNext()) {
+//                rowIterator.next();
+//                i++;
+//            }
+//            assertEquals(13, i);
+//            tx.success();
+//        }
+//    }
 
     public void testConceptText() {
         try (Transaction tx = getDatabase().beginTx()) {
@@ -416,7 +416,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
-            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
+//            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
             tx.success();
         }
 
@@ -487,7 +487,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
-            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
+//            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
             tx.success();
         }
 
@@ -503,7 +503,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                     found = true;
                 }
             }
-            assertTrue(!found);
+            assertFalse(found);
             tx.success();
         }
 
@@ -518,7 +518,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
-            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
+//            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
             tx.success();
         }
 
@@ -539,17 +539,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    public void testGetPipelineInfos() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({textProcessor:'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'})");
-            assertTrue(result.hasNext());
-            while (result.hasNext()) {
-                System.out.println(result.next());
-            }
-            tx.success();
-        }
-    }
-
     public void testStopWords() {
         try (Transaction tx = getDatabase().beginTx()) {
             Result res = getDatabase().execute(
@@ -564,7 +553,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
-            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
+//            assertEquals(TextProcessorProcedure.SUCCESS, resultNode);
             tx.success();
         }
 
@@ -590,10 +579,10 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             while (rowIterator.hasNext()) {
                 tagsCount++;
                 String tagValue = (String) rowIterator.next();
-                assertTrue(!tagValue.equalsIgnoreCase("would"));
-                assertTrue(!tagValue.equalsIgnoreCase("have"));
-                assertTrue(!tagValue.equalsIgnoreCase("i"));
-                assertTrue(!tagValue.equalsIgnoreCase("wish"));
+                assertFalse(tagValue.equalsIgnoreCase("would"));
+                assertFalse(tagValue.equalsIgnoreCase("have"));
+                assertFalse(tagValue.equalsIgnoreCase("i"));
+                assertFalse(tagValue.equalsIgnoreCase("wish"));
             }
             assertEquals(tagsCount, 5);
             tx.success();
@@ -628,7 +617,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             while (rowIterator.hasNext()) {
                 tagsCount++;
                 String tagValue = (String) rowIterator.next();
-                assertTrue(!tagValue.equalsIgnoreCase("be"));
+                assertFalse(tagValue.equalsIgnoreCase("be"));
             }
             assertEquals(tagsCount, 19);
             tx.success();

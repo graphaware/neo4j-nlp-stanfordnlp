@@ -18,6 +18,8 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
+import com.graphaware.nlp.processor.PipelineInfo;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -36,17 +38,12 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +52,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
 
-
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
@@ -63,15 +59,33 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public static final String PHRASE = "phrase";
     public static final String DEPENDENCY_GRAPH = "tokenizerAndDependency";
 
-    public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
+    protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
+    protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
 
-    private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
+    protected boolean initiated = false;
 
-    private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
+    @Override
+    public void init() {
 
-    public StanfordTextProcessor() {
-        super();
-        //Creating default pipeline
+        if (initiated) {
+            return;
+        }
+
+        createCorePipelines();
+        initiated = true;
+    }
+
+    @Override
+    public String getAlias() {
+        return "stanford";
+    }
+
+    @Override
+    public String override() {
+        return null;
+    }
+
+    protected void createCorePipelines() {
         createTokenizerPipeline();
         createSentimentPipeline();
         createTokenizerAndSentimentPipeline();
@@ -120,7 +134,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(PHRASE, pipeline);
-        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment")));
+        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment", PHRASE)));
     }
 
     private void createDependencyGraphPipeline() {
@@ -135,14 +149,14 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     }
 
-    private PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
+    protected PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
         List<String> stopwords = PipelineBuilder.getDefaultStopwords();
         PipelineInfo info = new PipelineInfo(name, this.getClass().getName(), getPipelineProperties(pipeline), buildSpecifications(actives),6, stopwords);
 
         return info;
     }
 
-    private Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
+    protected Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
         Map<String, Object> options = new HashMap<>();
         for (Object o : pipeline.getProperties().keySet()) {
             if (o instanceof String) {
@@ -151,28 +165,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
 
         return options;
-    }
-
-    @Override
-    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store) {
-        String pipeline;
-        switch (level) {
-            case 0:
-                pipeline = TOKENIZER;
-                break;
-            case 1:
-                pipeline = TOKENIZER_AND_SENTIMENT;
-                break;
-            case 2:
-                pipeline = PHRASE;
-                break;
-            case 3:
-                pipeline = DEPENDENCY_GRAPH;
-                break;
-            default:
-                pipeline = TOKENIZER;
-        }
-        return annotateText(text, id, pipeline, lang, store, null);
     }
 
     public StanfordCoreNLP getPipeline(String name) {
@@ -188,28 +180,27 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return pipeline;
     }
 
-    @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
 
-        AnnotatedText result = new AnnotatedText(id);
+
+    @Override
+    public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters) {
+
+        AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
-        StanfordCoreNLP pipeline = getPipeline(name);
+        System.out.println("Running annotation for pipeline " + pipelineName);
+        StanfordCoreNLP pipeline = getPipeline(pipelineName);
 
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
-        sentences.stream().map((sentence) -> {
-            return sentence;
-        }).forEach((sentence) -> {
+        sentences.forEach((sentence) -> {
             int sentenceNumber = sentenceSequence.getAndIncrement();
-            String sentenceId = id + "_" + sentenceNumber;
-            final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
+            final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
             extractTokens(lang, sentence, newSentence);
             extractSentiment(sentence, newSentence);
-            extractPhrases(sentence, newSentence);
+            extractPhrases(sentence, newSentence, pipelineName);
             extractDependencies(sentence, newSentence);
             result.addSentence(newSentence);
-//            newSentence.debugTagOccurenceTokenIds();
         });
         extractRelationship(result, sentences, document);
         return result;
@@ -224,6 +215,21 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         extractedPhrases.stream().forEach((holder) -> {
             newSentence.addPhraseOccurrence(holder.getBeginPosition(), holder.getEndPosition(), new Phrase(holder.getPhrase()));
         });
+    }
+
+    protected void extractPhrases(CoreMap sentence, Sentence newSentence, String pipelineName) {
+        pipelineInfos.keySet().forEach(k -> {
+            System.out.println("k: " + k);
+            System.out.println(pipelineInfos.get(k).getSpecifications());
+        });
+        PipelineInfo pipelineInfo = pipelineInfos.get(pipelineName);
+        if (!pipelineInfo
+                .getSpecifications()
+                .get(PHRASE)) {
+            return;
+        }
+
+        extractPhrases(sentence, newSentence);
     }
 
     protected void extractSentiment(CoreMap sentence, final Sentence newSentence) {
@@ -241,7 +247,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                    System.out.println(tokenId);
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
@@ -307,7 +312,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
     }
 
-    private void extractDependencies(CoreMap sentence, final Sentence newSentence) {
+    protected void extractDependencies(CoreMap sentence, final Sentence newSentence) {
         SemanticGraph semanticGraph = sentence.get(SemanticGraphCoreAnnotations.EnhancedDependenciesAnnotation.class);
         if (semanticGraph == null) {
             return;
@@ -327,7 +332,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
     }
 
-    private void extractRelationship(AnnotatedText annotatedText, List<CoreMap> sentences, Annotation document) {
+    protected void extractRelationship(AnnotatedText annotatedText, List<CoreMap> sentences, Annotation document) {
         Map<Integer, CorefChain> corefChains = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
         if (corefChains != null) {
             for (CorefChain chain : corefChains.values()) {
@@ -363,12 +368,12 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     }
 
     @Override
-    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams) {
+    public AnnotatedText sentiment(AnnotatedText annotatedText) {
         StanfordCoreNLP pipeline = pipelines.get(SENTIMENT);
         if (pipeline == null) {
             throw new RuntimeException("Pipeline: " + SENTIMENT + " doesn't exist");
         }
-        annotated.getSentences().parallelStream().forEach((item) -> {
+        annotatedText.getSentences().parallelStream().forEach((item) -> {
             Annotation document = new Annotation(item.getSentence());
             pipeline.annotate(document);
             List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -377,10 +382,10 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 extractSentiment(sentence.get(), item);
             }
         });
-        return annotated;
+        return annotatedText;
     }
 
-    private int extractSentiment(CoreMap sentence) {
+    protected int extractSentiment(CoreMap sentence) {
         Tree tree = sentence
                 .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
         if (tree == null) {
@@ -437,7 +442,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return null;
     }
 
-    private Tag getTag(String lang, CoreLabel token) {
+    protected Tag getTag(String lang, CoreLabel token) {
         Pair<Boolean, Boolean> stopword = token.get(StopwordAnnotator.class);
         if (stopword != null && (stopword.first() || stopword.second())) {
             return null;
@@ -465,7 +470,16 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return tag;
     }
 
-    private Set<PhraseHolder> inspectSubTree(Tree subTree) {
+    @Override
+    public boolean checkLemmaIsValid(String value) {
+        Matcher match = patternCheck.matcher(value);
+
+        //boolean found = patternCheck.matcher(value).find();
+
+        return match.find();
+    }
+
+    protected Set<PhraseHolder> inspectSubTree(Tree subTree) {
         Set<PhraseHolder> result = new TreeSet<>();
         if (subTree.value().equalsIgnoreCase("NP") || subTree.value().equalsIgnoreCase("NP-TMP")) {// set your rule of defining Phrase here
             PhraseHolder pHolder = new PhraseHolder();
@@ -679,35 +693,35 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     }
 
     @Override
-    public void createPipeline(Map<String, Object> pipelineSpec) {
-        //TODO add validation
-        String name = (String) pipelineSpec.get("name");
+    public void createPipeline(PipelineSpecification pipelineSpecification) {
+        //@todo create constants for processing steps
+        String name = pipelineSpecification.getName();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
         List<String> specActive = new ArrayList<>();
         List<String> stopwordsList;
 
-        if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
+        if (pipelineSpecification.hasProcessingStep("tokenize", true)) {
             pipelineBuilder.tokenize();
             specActive.add("tokenize");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("cleanxml", false)) {
+        if (pipelineSpecification.hasProcessingStep("cleanxml")) {
             pipelineBuilder.cleanxml();
             specActive.add("cleanxml");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("truecase", false)) {
+        if (pipelineSpecification.hasProcessingStep("truecase")) {
             pipelineBuilder.truecase();
             specActive.add("truecase");
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("dependency", false)) {
+        if (pipelineSpecification.hasProcessingStep("dependency")) {
             pipelineBuilder.dependencies();
             specActive.add("dependency");
         }
 
-        String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
-        boolean checkLemma = (boolean) pipelineSpec.getOrDefault("checkLemmaIsStopWord", false);
+        String stopWords = pipelineSpecification.getStopWords() != null ? pipelineSpecification.getStopWords() : "default";
+        boolean checkLemma = pipelineSpecification.hasProcessingStep("checkLemmaIsStopWord");
         if (checkLemma) {
             specActive.add("checkLemmaIsStopWord");
         }
@@ -719,19 +733,19 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             stopwordsList = PipelineBuilder.getCustomStopwordsList(stopWords);
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("sentiment", false)) {
+        if (pipelineSpecification.hasProcessingStep("sentiment")) {
             pipelineBuilder.extractSentiment();
             specActive.add("sentiment");
         }
-        if ((Boolean) pipelineSpec.getOrDefault("coref", false)) {
+        if (pipelineSpecification.hasProcessingStep("coref")) {
             pipelineBuilder.extractCoref();
             specActive.add("coref");
         }
-        if ((Boolean) pipelineSpec.getOrDefault("relations", false)) {
+        if (pipelineSpecification.hasProcessingStep("relations")) {
             pipelineBuilder.extractRelations();
             specActive.add("relations");
         }
-        Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4L);
+        Long threadNumber = pipelineSpecification.getThreadNumber() != 0 ? pipelineSpecification.getThreadNumber() : 4L;
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();
@@ -767,8 +781,8 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return list;
     }
 
-    private Map<String, Boolean> buildSpecifications(List<String> actives) {
-        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment");
+    protected Map<String, Boolean> buildSpecifications(List<String> actives) {
+        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
         Map<String, Boolean> specs = new HashMap<>();
         all.forEach(s -> {
             specs.put(s, actives.contains(s));
@@ -782,15 +796,11 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
     }
 
-    private List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
+    protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
         if (currTokenTokenIds.isEmpty()) {
             return Arrays.asList(tokenId);
         }
 
         return currTokenTokenIds;
-    }
-
-    public static String getPunctRegexPattern() {
-        return PUNCT_REGEX_PATTERN;
     }
 }
