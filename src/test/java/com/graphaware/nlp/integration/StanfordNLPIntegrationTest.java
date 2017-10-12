@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
 
-    @Test
+    /*@Test
     public void testStanfordAnnotationViaProcedure() {
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text:'Barack Obama is born in Hawaii. He is our president.', textProcessor:'stanford' " +
@@ -70,6 +70,6 @@ public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {
             assertFalse(result.hasNext());
         }));
-    }
+    }*/
 
 }

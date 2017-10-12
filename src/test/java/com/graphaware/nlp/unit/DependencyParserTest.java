@@ -33,7 +33,8 @@ public class DependencyParserTest {
         String annotators = "tokenize,ssplit,pos,depparse";
         Properties properties = new Properties();
         properties.setProperty("annotators", annotators);
-        properties.setProperty("depparse.model", DependencyParser.DEFAULT_MODEL);
+        //properties.setProperty("depparse.model", DependencyParser.DEFAULT_MODEL);
+        properties.setProperty("threads", "4");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
 
         String text = "Show me Josh Wedhon latest movies";
