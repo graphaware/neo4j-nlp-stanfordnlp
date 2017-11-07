@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>nlp-stanfordnlp</artifactId>
-    <version>3.1.3.45.1</version>
+    <version>3.2.1.51.1</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.8.0</stanford.nlp.version>
-        <graphaware.version>3.1.3.48</graphaware.version>
-        <resttest.version>3.1.3.45.15</resttest.version>
-        <neo4j.version>3.1.3</neo4j.version>
+        <graphaware.version>3.2.1.51</graphaware.version>
+        <resttest.version>3.2.1.51.16</resttest.version>
+        <neo4j.version>3.2.1</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
-            <version>3.1.3.45.1</version>
+            <version>3.2.1.51.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -123,8 +123,14 @@
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>3.2.1.51.1</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.19.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
