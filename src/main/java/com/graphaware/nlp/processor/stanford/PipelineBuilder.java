@@ -23,7 +23,13 @@ public class PipelineBuilder {
     
     public PipelineBuilder tokenize() {
         checkForExistingAnnotators();
-        annotators.append("tokenize, ssplit, pos, lemma, ner");
+        annotators.append("tokenize, ssplit, pos, lemma");
+        return this;
+    }
+
+    public PipelineBuilder extractNEs() {
+        checkForExistingAnnotators();
+        annotators.append("ner");
         return this;
     }
     

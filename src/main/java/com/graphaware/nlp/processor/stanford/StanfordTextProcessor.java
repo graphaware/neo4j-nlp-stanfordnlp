@@ -66,7 +66,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     @Override
     public void init() {
-
         if (initiated) {
             return;
         }
@@ -96,16 +95,18 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     private void createTokenizerPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(TOKENIZER)
                 .tokenize()
+                .extractNEs()
                 .defaultStopWordAnnotator()
                 .threadNumber(6)
                 .build();
         pipelines.put(TOKENIZER, pipeline);
-        pipelineInfos.put(TOKENIZER, createPipelineInfo(TOKENIZER, pipeline, Arrays.asList("tokenize")));
+        pipelineInfos.put(TOKENIZER, createPipelineInfo(TOKENIZER, pipeline, Arrays.asList("tokenize", "ner")));
     }
 
     private void createSentimentPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(SENTIMENT)
                 .tokenize()
+                //.extractNEs()
                 .extractSentiment()
                 .threadNumber(6)
                 .build();
@@ -116,17 +117,19 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     private void createTokenizerAndSentimentPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(TOKENIZER_AND_SENTIMENT)
                 .tokenize()
+                .extractNEs()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
                 .threadNumber(6)
                 .build();
         pipelines.put(TOKENIZER_AND_SENTIMENT, pipeline);
-        pipelineInfos.put(TOKENIZER_AND_SENTIMENT, createPipelineInfo(TOKENIZER_AND_SENTIMENT, pipeline, Arrays.asList("tokenize", "sentiment")));
+        pipelineInfos.put(TOKENIZER_AND_SENTIMENT, createPipelineInfo(TOKENIZER_AND_SENTIMENT, pipeline, Arrays.asList("tokenize", "ner", "sentiment")));
     }
 
     private void createPhrasePipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(PHRASE)
                 .tokenize()
+                .extractNEs()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
                 .extractCoref()
@@ -134,24 +137,25 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 .threadNumber(6)
                 .build();
         pipelines.put(PHRASE, pipeline);
-        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "coref", "relations", "sentiment", PHRASE)));
+        pipelineInfos.put(PHRASE, createPipelineInfo(PHRASE, pipeline, Arrays.asList("tokenize", "ner", "coref", "relations", "sentiment", PHRASE)));
     }
 
     private void createDependencyGraphPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(DEPENDENCY_GRAPH)
                 .tokenize()
+                .extractNEs()
                 .defaultStopWordAnnotator()
                 .dependencies()
                 .threadNumber(6)
                 .build();
         pipelines.put(DEPENDENCY_GRAPH, pipeline);
-        pipelineInfos.put(DEPENDENCY_GRAPH, createPipelineInfo(DEPENDENCY_GRAPH, pipeline, Arrays.asList("tokenize", "dependency")));
+        pipelineInfos.put(DEPENDENCY_GRAPH, createPipelineInfo(DEPENDENCY_GRAPH, pipeline, Arrays.asList("tokenize", "ner", "dependency")));
 
     }
 
     protected PipelineInfo createPipelineInfo(String name, StanfordCoreNLP pipeline, List<String> actives) {
         List<String> stopwords = PipelineBuilder.getDefaultStopwords();
-        PipelineInfo info = new PipelineInfo(name, this.getClass().getName(), getPipelineProperties(pipeline), buildSpecifications(actives),6, stopwords);
+        PipelineInfo info = new PipelineInfo(name, this.getClass().getName(), getPipelineProperties(pipeline), buildSpecifications(actives), 6, stopwords);
 
         return info;
     }
@@ -196,7 +200,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         sentences.forEach((sentence) -> {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
-            extractTokens(lang, sentence, newSentence);
+            extractTokens(lang, sentence, newSentence, pipelineName);
             extractSentiment(sentence, newSentence);
             extractPhrases(sentence, newSentence, pipelineName);
             extractDependencies(sentence, newSentence);
@@ -237,7 +241,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         newSentence.setSentiment(score);
     }
 
-    protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence) {
+    protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence, String pipelineName) {
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
@@ -246,7 +250,10 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
-                    String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    String currentNe = backgroundSymbol;
+                    if (pipelineInfos.get(pipelineName).getSpecifications().containsKey("ner") && pipelineInfos.get(pipelineName).getSpecifications().get("ner"))
+                        currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
@@ -449,6 +456,8 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
         String ne = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+        if (ne == null)
+            ne = backgroundSymbol;
         String lemma;
 
         if (ne.equals(backgroundSymbol)) {
@@ -705,6 +714,11 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             specActive.add("tokenize");
         }
 
+        if (pipelineSpecification.hasProcessingStep("ner", true)) {
+            pipelineBuilder.extractNEs();
+            specActive.add("ner");
+        }
+
         if (pipelineSpecification.hasProcessingStep("cleanxml")) {
             pipelineBuilder.cleanxml();
             specActive.add("cleanxml");
@@ -782,7 +796,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     }
 
     protected Map<String, Boolean> buildSpecifications(List<String> actives) {
-        List<String> all = Arrays.asList("tokenize", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
+        List<String> all = Arrays.asList("tokenize", "ner", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
         Map<String, Boolean> specs = new HashMap<>();
         all.forEach(s -> {
             specs.put(s, actives.contains(s));
