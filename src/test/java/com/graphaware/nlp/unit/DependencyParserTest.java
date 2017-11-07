@@ -30,12 +30,7 @@ public class DependencyParserTest {
 
     @Test
     public void testStanfordTypedDependenciesParsing() {
-        String annotators = "tokenize,ssplit,pos,depparse";
-        Properties properties = new Properties();
-        properties.setProperty("annotators", annotators);
-        //properties.setProperty("depparse.model", DependencyParser.DEFAULT_MODEL);
-        properties.setProperty("threads", "4");
-        StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
+        StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline(StanfordTextProcessor.DEPENDENCY_GRAPH);
 
         String text = "Show me Josh Wedhon latest movies";
         Annotation document = new Annotation(text);
