@@ -258,13 +258,22 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             newTag.setNe(Arrays.asList(currToken.getNe()));
-                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag), getTokenIdsToUse(tokenId, currToken.getTokenIds()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), 
+                                    currToken.getEndPosition(), 
+                                    currToken.getOriginalValue(), 
+                                    newSentence.addTag(newTag), 
+                                    getTokenIdsToUse(tokenId, currToken.getTokenIds()));
                             currToken.reset();
                         }
-                    } else if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
+                    } else if (currentNe.equals(backgroundSymbol) 
+                            && currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = getTag(lang, token);
                         if (tag != null) {
-                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag), Arrays.asList(tokenId));
+                            newSentence.addTagOccurrence(token.beginPosition(), 
+                                    token.endPosition(), 
+                                    token.originalText(), 
+                                    newSentence.addTag(tag), 
+                                    Arrays.asList(tokenId));
                         } /* else { //>>>>>>>> This shouldn't be here, right? Because tokenId is NOT NamedEntity; moreover, getTag() returns null only if it didn't pass stopwords list.
                             if (!currToken.getTokenIds().contains(tokenId)) {
                                 currToken.getTokenIds().add(tokenId);   //>>>>>>>> This is wrong: updateToken() should be used!
@@ -272,37 +281,58 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                                 // debug
                             }
                         }*/
-                    } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
+                    } else if (currentNe.equals(backgroundSymbol) 
+                            && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             newTag.setNe(Arrays.asList(currToken.getNe()));
-                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag), getTokenIdsToUse(tokenId, currToken.getTokenIds()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), 
+                                    currToken.getEndPosition(), 
+                                    currToken.getOriginalValue(),
+                                    newSentence.addTag(newTag), 
+                                    getTokenIdsToUse(tokenId, currToken.getTokenIds()));
                         }
                         currToken.reset();
                         Tag tag = getTag(lang, token);
                         if (tag != null) {
-                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag), getTokenIdsToUse(tokenId, currToken.getTokenIds()));
+                            newSentence.addTagOccurrence(token.beginPosition(), 
+                                    token.endPosition(), 
+                                    token.originalText(),
+                                    newSentence.addTag(tag), 
+                                    getTokenIdsToUse(tokenId, currToken.getTokenIds()));
                         }
-                    } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
+                    } else if (!currentNe.equals(currToken.getNe()) 
+                            && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
                             Tag tag = new Tag(currToken.getToken(), lang);
                             tag.setNe(Arrays.asList(currToken.getNe()));
-                            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag), getTokenIdsToUse(tokenId, currToken.getTokenIds()));
+                            newSentence.addTagOccurrence(currToken.getBeginPosition(), 
+                                    currToken.getEndPosition(), 
+                                    currToken.getOriginalValue(),
+                                    newSentence.addTag(tag), 
+                                    getTokenIdsToUse(tokenId, currToken.getTokenIds()));
                         }
                         currToken.reset();
-                        currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)), tokenId);
+                        currToken.updateTokenAndTokenId(
+                                StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)), 
+                                StringUtils.getNotNullString(token.originalText()),
+                                tokenId);
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
-                    } else if (!currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
-                        currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)), tokenId);
+                    } else if (!currentNe.equals(backgroundSymbol) 
+                            && currToken.getNe().equals(backgroundSymbol)) {
+                        currToken.updateTokenAndTokenId(
+                                StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)), 
+                                StringUtils.getNotNullString(token.originalText()),                                
+                                tokenId);
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
                     } else {
                         // happens for eg when there is a space before a Tag, hence the "Before"
                         String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
                         String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
-                        currToken.updateToken(before);
-                        currToken.updateToken(currentText, tokenId);
+                        currToken.updateToken(before, before);
+                        currToken.updateTokenAndTokenId(currentText, token.originalText(), tokenId);
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
                     }
@@ -315,7 +345,11 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         if (currToken.getToken().length() > 0) {
             Tag tag = new Tag(currToken.getToken(), lang);
             tag.setNe(Arrays.asList(currToken.getNe()));
-            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag), currToken.getTokenIds());
+            newSentence.addTagOccurrence(currToken.getBeginPosition(), 
+                    currToken.getEndPosition(), 
+                    currToken.getOriginalValue(),
+                    newSentence.addTag(tag), 
+                    currToken.getTokenIds());
         }
     }
 
@@ -551,6 +585,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
         private String ne;
         private StringBuilder sb;
+        private StringBuilder sbOriginalValue;
         private int beginPosition;
         private int endPosition;
         private List<String> tokenIds = new ArrayList<>();
@@ -564,10 +599,11 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
 
         public String getToken() {
-            if (sb == null) {
-                return " - ";
-            }
             return sb.toString();
+        }
+        
+        public String getOriginalValue() {
+            return sbOriginalValue.toString();
         }
 
         public int getBeginPosition() {
@@ -582,12 +618,13 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             this.ne = ne;
         }
 
-        public void updateToken(String tknStr) {
+        public void updateToken(String tknStr, String originalValue) {
             this.sb.append(tknStr);
+            this.sbOriginalValue.append(originalValue);
         }
 
-        public void updateToken(String tknStr, String tokenId) {
-            this.sb.append(tknStr);
+        public void updateTokenAndTokenId(String tknStr, String originalValue, String tokenId) {
+            updateToken(tknStr, originalValue);
             tokenIds.add(tokenId);
         }
 
@@ -607,6 +644,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
         public final void reset() {
             sb = new StringBuilder();
+            sbOriginalValue = new StringBuilder();
             beginPosition = -1;
             endPosition = -1;
             tokenIds.clear();

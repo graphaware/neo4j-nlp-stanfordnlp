@@ -72,7 +72,7 @@ public class TextProcessorTest {
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
 
         test.assertSentencesCount(1);
-        assertEquals("governance", test.getTagOccurrenceAtPosition(0, 16).getLemma());
+        assertEquals("governance", test.getTagAtPosition(0, 16).getLemma());
 
         PipelineSpecification pipelineSpecification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
         pipelineSpecification.addProcessingStep("truecase");
@@ -81,7 +81,8 @@ public class TextProcessorTest {
 
         test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(1);
-        assertEquals("governance", test.getTagOccurrenceAtPosition(0, 16).getLemma());
+        assertEquals("governance", test.getTagAtPosition(0, 16).getLemma());
+        assertEquals("Governance", test.getTagOccurrenceAtPosition(0, 16).getValue());
         
     }
     
