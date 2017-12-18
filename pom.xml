@@ -5,6 +5,57 @@
     <artifactId>nlp-stanfordnlp</artifactId>
     <version>3.3.1.51.2-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License, version 3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</connection>
+        <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</developerConnection>
+        <url>git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>alenegro</id>
+            <name>Alessandro Negro</name>
+            <email>alessandro@graphaware.com</email>
+        </developer>
+        <developer>
+            <id>ikwattro</id>
+            <name>Christophe Willemsen</name>
+            <email>christophe@graphaware.com</email>
+        </developer>
+        <developer>
+            <id>vlasta-kus</id>
+            <name>Vlastimil Kus</name>
+            <email>vlasta@graphaware.com</email>
+        </developer>
+        <developer>
+            <id>graphaware</id>
+            <name>GraphAware</name>
+            <email>nlp@graphaware.com</email>
+        </developer>
+    </developers>
+
+    <inceptionYear>2015</inceptionYear>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/graphaware/neo4j-nlp-stanfordnlp/issues</url>
+    </issueManagement>
+
+    <organization>
+        <name>Graph Aware Limited</name>
+        <url>https://graphaware.com</url>
+    </organization>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.8.0</stanford.nlp.version>
@@ -14,6 +65,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
