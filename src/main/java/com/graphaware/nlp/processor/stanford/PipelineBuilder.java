@@ -1,5 +1,6 @@
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
 import java.util.ArrayList;
@@ -9,8 +10,6 @@ import java.util.Properties;
 
 public class PipelineBuilder {
 
-    protected static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
-//private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,but,by,for,if,in,into,it,no,o,on,or,such,that,their,then,there,these,they,this,to,will,with";
     protected final Properties properties = new Properties();
     protected final StringBuilder annotators = new StringBuilder(); //basics annotators
     protected int threadsNumber = 4;
@@ -85,7 +84,7 @@ public class PipelineBuilder {
         checkForExistingAnnotators();
         annotators.append("stopword");
         properties.setProperty("customAnnotatorClass.stopword", StopwordAnnotator.class.getName());
-        properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
+        properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, AbstractTextProcessor.DEFAULT_STOP_WORD_LIST);
         return this;
     }
 
@@ -101,7 +100,7 @@ public class PipelineBuilder {
             annotators.append(annoName);
             properties.setProperty("customAnnotatorClass." + annoName, StopwordAnnotator.class.getName());
             if (customStopWordList.startsWith("+")) {
-                stopWordList = CUSTOM_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+                stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
             } else {
                 stopWordList = customStopWordList;
             }
@@ -132,7 +131,7 @@ public class PipelineBuilder {
 
     public static List<String> getDefaultStopwords() {
         List<String> stopwords = new ArrayList<>();
-        Arrays.stream(CUSTOM_STOP_WORD_LIST.split(",")).forEach(s -> {
+        Arrays.stream(AbstractTextProcessor.DEFAULT_STOP_WORD_LIST.split(",")).forEach(s -> {
             stopwords.add(s.trim());
         });
 
@@ -142,7 +141,7 @@ public class PipelineBuilder {
     public static List<String> getCustomStopwordsList(String customStopWordList) {
         String stopWordList;
         if (customStopWordList.startsWith("+")) {
-            stopWordList = CUSTOM_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+            stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
         } else {
             stopWordList = customStopWordList;
         }

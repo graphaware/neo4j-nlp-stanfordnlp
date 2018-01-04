@@ -271,4 +271,26 @@ public class TextProcessorTest {
         Sentence sentence = annotatedText.getSentences().get(0);
         assertEquals("be", sentence.getTagOccurrence(49).getLemma());
     }
+
+    @Test
+    public void testAnnotateTextWithSpecification() {
+        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        specification.getProcessingSteps().put("tokenize", true);
+        specification.getProcessingSteps().put("ner", true);
+        specification.getExcludedNER().add("LOCATION");
+        String text = "My name is John Doe and I work in Switzerland";
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        assertEquals(1, annotatedText.getSentences().size());
+        int numberOfLocationEntities = 0;
+        for (Sentence sentence : annotatedText.getSentences()) {
+            for (List<TagOccurrence> olist : sentence.getTagOccurrences().values()) {
+                for (TagOccurrence occurrence : olist ) {
+                    if (occurrence.getElement().getNeAsList().contains("LOCATION")) {
+                        numberOfLocationEntities++;
+                    }
+                }
+            }
+        }
+        assertEquals(0, numberOfLocationEntities);
+    }
 }
