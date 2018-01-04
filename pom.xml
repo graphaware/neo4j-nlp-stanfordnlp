@@ -64,13 +64,14 @@
         <neo4j.version>3.3.1</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <nlp.version>3.3.1.51.3-SNAPSHOT</nlp.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
-            <version>3.3.1.51.2</version>
+            <version>${nlp.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -175,7 +176,7 @@
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
-            <version>3.3.1.51.2</version>
+            <version>${nlp.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
