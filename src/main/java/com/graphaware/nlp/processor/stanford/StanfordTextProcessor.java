@@ -246,12 +246,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     protected void extractPhrases(CoreMap sentence, Sentence newSentence, String pipelineName) {
         PipelineInfo pipelineInfo = pipelineInfos.get(pipelineName);
-        if (!pipelineInfo
-                .getSpecifications()
-                .get(PHRASE)) {
-            return;
-        }
-
         extractPhrases(sentence, newSentence);
     }
 
@@ -389,7 +383,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = backgroundSymbol;
-                    if (pipelineInfos.get(pipelineName).getSpecifications().containsKey("ner") && pipelineInfos.get(pipelineName).getSpecifications().get("ner"))
+                    if (pipelineInfos.get(pipelineName).getSpecifications().containsKey("ner") && pipelineInfos.get(pipelineName).getSpecifications().get("ner").equals(true))
                         currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
@@ -714,7 +708,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return result;
     }
 
-    @Override
     public String train(String project, String alg, String model, String file, String lang, Map<String, String> params) {
         throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
     }
@@ -971,9 +964,9 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return list;
     }
 
-    protected Map<String, Boolean> buildSpecifications(List<String> actives) {
+    protected Map<String, Object> buildSpecifications(List<String> actives) {
         List<String> all = Arrays.asList("tokenize", "ner", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
-        Map<String, Boolean> specs = new HashMap<>();
+        Map<String, Object> specs = new HashMap<>();
         all.forEach(s -> {
             specs.put(s, actives.contains(s));
         });
@@ -982,6 +975,15 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     }
 
     @Override
+    public String train(String alg, String modelId, String file, String lang, Map<String, Object> params) {
+        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
+    }
+
+    @Override
+    public String test(String alg, String modelId, String file, String lang) {
+        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
+    }
+
     public String test(String project, String alg, String model, String file, String lang) {
         throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
     }
