@@ -224,9 +224,17 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
             extractTokens(lang, sentence, newSentence, pipelineName);
-            extractSentiment(sentence, newSentence);
-            extractPhrases(sentence, newSentence, pipelineName);
-            extractDependencies(sentence, newSentence);
+            if ((boolean) pipelineInfos.get(pipelineName).specifications.get(PHRASE)) {
+                extractPhrases(sentence, newSentence, pipelineName);
+            }
+            if ((boolean) pipelineInfos.get(pipelineName).specifications.get(SENTIMENT)) {
+                extractSentiment(sentence, newSentence);
+            }
+            if ((boolean) pipelineInfos.get(pipelineName).specifications.get("dependency")) {
+                extractDependencies(sentence, newSentence);
+            }
+            
+
             result.addSentence(newSentence);
         });
         extractRelationship(result, sentences, document);
