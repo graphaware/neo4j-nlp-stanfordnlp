@@ -97,7 +97,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         StanfordCoreNLP pipeline = new PipelineBuilder(CORE_PIPELINE_NAME)
                 .tokenize()
                 .extractNEs()
-                .defaultStopWordAnnotator()
+//                .defaultStopWordAnnotator()
                 .extractSentiment()
                 .extractCoref()
                 .extractRelations()
@@ -178,8 +178,26 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(CORE_PIPELINE_NAME);
         if (pipelineSpecification.getStopWords() != null) {
-            pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, pipelineSpecification.getStopWords());
+            String customStopWordList = pipelineSpecification.getStopWords();
+            String stopWordList;
+            if (customStopWordList.startsWith("+")) {
+                stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+            } else {
+                stopWordList = customStopWordList;
+            }
+            pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
+            String annotatorName = "customAnnotatorClass.stopword";
+            pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
+            pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
+        } else {
+            String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
+            pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
+            String annotatorName = "customAnnotatorClass.stopword";
+            pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
+            pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
         }
+
+        pipeline.addAnnotator(new StopwordAnnotator(getClass().getName(), pipeline.getProperties()));
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);

@@ -15,10 +15,7 @@
  */
 package com.graphaware.nlp.processor.stanford;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -29,7 +26,6 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.ArraySet;
 import edu.stanford.nlp.util.Pair;
-import java.util.Arrays;
 
 public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean, Boolean>> {
 
@@ -59,12 +55,17 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
     private static final Class<? extends Pair> boolPair = Pair.makePair(true, true).getClass();
 
     private final Properties props;
-    private final CharArraySetWrapper stopwords;
-    private final boolean checkLemma;
+    private CharArraySetWrapper stopwords;
+    private boolean checkLemma;
 
     public StopwordAnnotator(String annotatorClass, Properties props) {
+        System.out.println(annotatorClass);
         this.props = props;
+        checkStopwords();
 
+    }
+
+    protected void checkStopwords() {
         this.checkLemma = Boolean.parseBoolean(props.getProperty(CHECK_LEMMA, "false"));
 
         if (this.props.containsKey(STOPWORDS_LIST)) {
@@ -78,6 +79,7 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
 
     @Override
     public void annotate(Annotation annotation) {
+        checkStopwords();
         if (stopwords != null && stopwords.size() > 0 && annotation.containsKey(TokensAnnotation.class)) {
             List<CoreLabel> tokens = annotation.get(TokensAnnotation.class);
             for (CoreLabel token : tokens) {

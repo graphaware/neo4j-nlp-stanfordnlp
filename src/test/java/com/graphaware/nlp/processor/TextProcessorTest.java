@@ -59,7 +59,7 @@ public class TextProcessorTest {
         test.assertTagsCountInSentence(15, 0);
         test.assertTagsCountInSentence(11, 1);
         test.assertTagsCountInSentence(24, 2);
-        test.assertTagsCountInSentence(9, 3);
+        test.assertTagsCountInSentence(8, 3);
 
         test.assertTag(newTag("Pakistan", Collections.singletonList("LOCATION"), Collections.emptyList()));
         test.assertTag(newTag("show", Collections.emptyList(), Collections.singletonList("VBZ")));
@@ -292,5 +292,44 @@ public class TextProcessorTest {
             }
         }
         assertEquals(0, numberOfLocationEntities);
+    }
+
+    @Test
+    public void testAddPipelineTakesStopwordsIntoAccount() {
+        String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
+        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        specification.getProcessingSteps().put("tokenize", true);
+        String stopwords = "själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som, dess, skulle, våra, på, sådana, har, blivit, det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken, till, över, vår, är, jag, nu, sedan, hans, vid, vara, hur, min, här, sitta, än, ju, blev, ut, bli, sina, hennes, detta, oss, alla, någon, allt, utan, blir, några, åt, vårt, där, samma, inte, inom, hon, något, upp, honom, var, sig, vilket, vart, er, och, kunde, ej, vars, mot, men, ni, ha, din, ert, för, mina, vilka, så, kan, vem, man, en, icke, mitt, när, mycket, deras, mellan, om, dina, av";
+        specification.setStopWords("sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som");
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        List<String> blacklist = Arrays.asList(stopwords.split(","));
+        annotatedText.getTags().forEach(tag -> {
+            assertFalse(blacklist.contains(tag.getLemma()));
+        });
+    }
+
+    @Test
+    public void testAddPipelineTakesStopwordsIntoAccountAfterNormalAnnotation() {
+        String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
+        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        specification.getProcessingSteps().put("tokenize", true);
+        String stopwords = "sådan, själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
+        specification.setStopWords(stopwords);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        List<String> blacklist = Arrays.asList(stopwords.split(","));
+        annotatedText.getTags().forEach(tag -> {
+            assertFalse(blacklist.contains(tag.getLemma()));
+        });
+
+        PipelineSpecification specification2 = new PipelineSpecification("custom2", StanfordTextProcessor.class.getName());
+        specification.getProcessingSteps().put("tokenize", true);
+        String stopwords2 = "eller, sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
+        specification2.setStopWords(stopwords2);
+        AnnotatedText annotatedText2 = textProcessor.annotateText(text, "en", specification2);
+        List<String> blacklist2 = Arrays.asList(stopwords2.split(","));
+        annotatedText2.getTags().forEach(tag -> {
+            System.out.println(tag.getLemma());
+            assertFalse(blacklist2.contains(tag.getLemma()));
+        });
     }
 }
