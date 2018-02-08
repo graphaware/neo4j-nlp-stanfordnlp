@@ -52,6 +52,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
     protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
+    private static final String STEP_RELATIONS = "relations";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
@@ -93,11 +94,10 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         createDependencyGraphPipeline();
     }
 
-    private void createFullPipeline() {
+    protected void createFullPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder(CORE_PIPELINE_NAME)
                 .tokenize()
                 .extractNEs()
-//                .defaultStopWordAnnotator()
                 .extractSentiment()
                 .extractCoref()
                 .extractRelations()
@@ -107,7 +107,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         pipelineInfos.put(
                 CORE_PIPELINE_NAME,
                 createPipelineInfo(CORE_PIPELINE_NAME, pipeline, Arrays.asList("tokenize", "ner", "coref", "relations", "sentiment", "dependency", "phrase")));
-
     }
 
     private void createTokenizerPipeline() {
@@ -219,6 +218,8 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
             if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY, false)) {
                 extractDependencies(sentence, newSentence);
+            }
+            if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS, false)) {
                 extractRelationship(result, sentences, document);
             }
             result.addSentence(newSentence);
