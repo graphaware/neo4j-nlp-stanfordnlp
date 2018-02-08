@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
-    private static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
+    protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String XML_TOKENIZER = "tokenizer";
