@@ -80,6 +80,13 @@ public class PipelineBuilder {
         return this;
     }
 
+    public PipelineBuilder openIE() {
+        checkForExistingAnnotators();
+        annotators.append("ner, depparse, natlog, openie");
+
+        return this;
+    }
+
     public PipelineBuilder defaultStopWordAnnotator() {
         checkForExistingAnnotators();
         annotators.append("stopword");

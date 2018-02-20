@@ -60,6 +60,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
     public static final String PHRASE = "phrase";
     public static final String DEPENDENCY_GRAPH = "tokenizerAndDependency";
+    public static final String IE = "ie";
 
     protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
     protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
@@ -92,6 +93,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         createTokenizerAndSentimentPipeline();
         createPhrasePipeline();
         createDependencyGraphPipeline();
+        createIEPipeline();
     }
 
     protected void createFullPipeline() {
@@ -101,12 +103,13 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 .extractSentiment()
                 .extractCoref()
                 .extractRelations()
+                .openIE()
                 .threadNumber(6)
                 .build();
         pipelines.put(CORE_PIPELINE_NAME, pipeline);
         pipelineInfos.put(
                 CORE_PIPELINE_NAME,
-                createPipelineInfo(CORE_PIPELINE_NAME, pipeline, Arrays.asList("tokenize", "ner", "coref", "relations", "sentiment", "dependency", "phrase")));
+                createPipelineInfo(CORE_PIPELINE_NAME, pipeline, Arrays.asList("tokenize", "ner", "coref", "relations", "sentiment", "dependency", "phrase", "natlog", "openie")));
     }
 
     private void createTokenizerPipeline() {
@@ -137,6 +140,12 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         StanfordCoreNLP pipeline = pipelines.get(CORE_PIPELINE_NAME);
         pipelines.put(DEPENDENCY_GRAPH, pipeline);
         pipelineInfos.put(DEPENDENCY_GRAPH, createPipelineInfo(DEPENDENCY_GRAPH, pipeline, Arrays.asList("tokenize", "ner", "dependency")));
+    }
+
+    private void createIEPipeline() {
+        StanfordCoreNLP pipeline = pipelines.get(CORE_PIPELINE_NAME);
+        pipelines.put(IE, pipeline);
+        pipelineInfos.put(IE, createPipelineInfo(IE, pipeline, Arrays.asList("tokenize", "ner", "dependency", "sentiment", "phrase", "natlog", "openie")));
 
     }
 
@@ -252,11 +261,12 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             if ((boolean) pipelineInfos.get(pipelineName).specifications.get("dependency")) {
                 extractDependencies(sentence, newSentence);
             }
-            
+            if ( (boolean) pipelineInfos.get(pipelineName).specifications.get("relations")) {
+                extractRelationship(result, sentences, document);
+            }
 
             result.addSentence(newSentence);
         });
-        extractRelationship(result, sentences, document);
         return result;
     }
 
@@ -539,6 +549,11 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                 CorefChain.CorefMention representative = chain.getRepresentativeMention();
                 int representativeSenteceNumber = representative.sentNum - 1;
                 List<CoreLabel> representativeTokens = sentences.get(representativeSenteceNumber).get(CoreAnnotations.TokensAnnotation.class);
+                System.out.println(representativeTokens.size() + " representative tokens");
+                System.out.println("representative end index is : " + representative.endIndex);
+                if (representative.endIndex - 1 > representativeTokens.size() ) {
+                    continue;
+                }
                 int beginPosition = representativeTokens.get(representative.startIndex - 1).beginPosition();
                 int endPosition = representativeTokens.get(representative.endIndex - 2).endPosition();
                 Phrase representativePhraseOccurrence = annotatedText.getSentences().get(representativeSenteceNumber).getPhraseOccurrence(beginPosition, endPosition);
@@ -901,32 +916,32 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public void createPipeline(PipelineSpecification pipelineSpecification) {
         //@todo create constants for processing steps
         String name = pipelineSpecification.getName();
-        PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
+//        PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
         List<String> specActive = new ArrayList<>();
         List<String> stopwordsList;
 
         if (pipelineSpecification.hasProcessingStep("tokenize", true)) {
-            pipelineBuilder.tokenize();
+//            pipelineBuilder.tokenize();
             specActive.add("tokenize");
         }
 
         if (pipelineSpecification.hasProcessingStep("ner", true)) {
-            pipelineBuilder.extractNEs();
+//            pipelineBuilder.extractNEs();
             specActive.add("ner");
         }
 
         if (pipelineSpecification.hasProcessingStep("cleanxml")) {
-            pipelineBuilder.cleanxml();
+//            pipelineBuilder.cleanxml();
             specActive.add("cleanxml");
         }
 
         if (pipelineSpecification.hasProcessingStep("truecase")) {
-            pipelineBuilder.truecase();
+//            pipelineBuilder.truecase();
             specActive.add("truecase");
         }
 
         if (pipelineSpecification.hasProcessingStep("dependency")) {
-            pipelineBuilder.dependencies();
+//            pipelineBuilder.dependencies();
             specActive.add("dependency");
         }
 
@@ -936,29 +951,29 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             specActive.add("checkLemmaIsStopWord");
         }
         if (stopWords.equalsIgnoreCase("default")) {
-            pipelineBuilder.defaultStopWordAnnotator();
+//            pipelineBuilder.defaultStopWordAnnotator();
             stopwordsList = PipelineBuilder.getDefaultStopwords();
         } else {
-            pipelineBuilder.customStopWordAnnotator(stopWords, checkLemma);
+//            pipelineBuilder.customStopWordAnnotator(stopWords, checkLemma);
             stopwordsList = PipelineBuilder.getCustomStopwordsList(stopWords);
         }
 
         if (pipelineSpecification.hasProcessingStep("sentiment")) {
-            pipelineBuilder.extractSentiment();
+//            pipelineBuilder.extractSentiment();
             specActive.add("sentiment");
         }
         if (pipelineSpecification.hasProcessingStep("coref")) {
-            pipelineBuilder.extractCoref();
+//            pipelineBuilder.extractCoref();
             specActive.add("coref");
         }
         if (pipelineSpecification.hasProcessingStep("relations")) {
-            pipelineBuilder.extractRelations();
+//            pipelineBuilder.extractRelations();
             specActive.add("relations");
         }
         Long threadNumber = pipelineSpecification.getThreadNumber() != 0 ? pipelineSpecification.getThreadNumber() : 4L;
-        pipelineBuilder.threadNumber(threadNumber.intValue());
+//        pipelineBuilder.threadNumber(threadNumber.intValue());
 
-        StanfordCoreNLP pipeline = pipelineBuilder.build();
+        StanfordCoreNLP pipeline = pipelines.get(CORE_PIPELINE_NAME);
         pipelines.put(name, pipeline);
         PipelineInfo pipelineInfo = new PipelineInfo(
                 name,
