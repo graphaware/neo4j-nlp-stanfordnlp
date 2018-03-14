@@ -1,0 +1,241 @@
+/*
+ *
+ *
+ */
+package com.graphaware.nlp.processor.stanford.model;
+
+import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.File;
+import java.util.List;
+import java.util.Properties;
+import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.stanford.nlp.ie.AbstractSequenceClassifier;
+import edu.stanford.nlp.ie.crf.*;
+import edu.stanford.nlp.io.IOUtils;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
+import edu.stanford.nlp.sequences.SeqClassifierFlags;
+import edu.stanford.nlp.util.Triple;
+import edu.stanford.nlp.util.StringUtils;
+
+import com.graphaware.nlp.util.GenericModelParameters;
+
+
+public class NERModelTool {
+
+    private static final String MODEL_NAME = "NER";
+    private static final String DEFAULT_PROPERTIES_FILE = "ner-config.properties";
+    private final String modelDescr;
+    private String entityType;
+    //private AbstractSequenceClassifier<CoreLabel> model;
+    private Properties props;
+
+    private static final Logger LOG = LoggerFactory.getLogger(NERModelTool.class);
+
+    public NERModelTool(String fileIn, String modelDescr, String lang, String propertiesFile) {
+        this.entityType = null; // train only specific named entity; null = train all entities present in the training set
+        this.modelDescr = modelDescr;
+        /*if (params != null) {
+            if (params.containsKey(GenericModelParameters.TRAIN_ENTITYTYPE)) {
+                this.entityType = (String) params.get(GenericModelParameters.TRAIN_ENTITYTYPE);
+            }
+        }*/
+
+        //this.props = StringUtils.propFileToProperties("/Users/vlasta/Documents/workspace/NLP/neo4j-nlp-stanfordnlp/src/main/resources/com/graphaware/nlp/processor/stanford/model/ner-config.properties");
+        this.props = processPropertiesFile(propertiesFile);
+        if (fileIn != null && !fileIn.isEmpty())
+            this.props.setProperty("trainFile", fileIn);
+    }
+
+    public NERModelTool(String fileIn, String modelDescr, String lang) {
+        this(fileIn, modelDescr, lang, null);
+    }
+
+    public NERModelTool(String modelDescr, String lang) { this(null, modelDescr, lang, null); }
+
+    public void train() {
+        SeqClassifierFlags flags = new SeqClassifierFlags(props);
+        CRFClassifier<CoreLabel> model = new CRFClassifier<CoreLabel>(flags);
+        LOG.info("Starting the training ...");
+        model.train();
+        LOG.info("Training finished!");
+
+        // Save the model
+        String modelPath = props.getProperty("serializeTo");
+        model.serializeClassifier(modelPath);
+        LOG.info("Model saved to " + modelPath);
+    }
+
+    public String validate() {
+        throw new UnsupportedOperationException("Method validate() not implemented yet (StanfordNLP Text Processor).");
+        /*String result = "";
+        if (this.fileValidate == null) {
+            //List<EvaluationMonitor<NameSample>> listeners = new LinkedList<EvaluationMonitor<NameSample>>();
+            try (ObjectStream<String> lineStream = openFile(fileIn); NameSampleDataStream sampleStream = new NameSampleDataStream(lineStream)) {
+                LOG.info("Validation of " + MODEL_NAME + " started ...");
+                // Using CrossValidator
+                TokenNameFinderCrossValidator evaluator = new TokenNameFinderCrossValidator(lang, entityType, trainParams, null);
+                // the second argument of 'evaluate()' gives number of folds (n), i.e. number of times the training-testing will be run (with data splitting train:test = (n-1):1)
+                evaluator.evaluate(sampleStream, nFolds);
+                result = "F = " + decFormat.format(evaluator.getFMeasure().getFMeasure())
+                        + " (Precision = " + decFormat.format(evaluator.getFMeasure().getPrecisionScore())
+                        + ", Recall = " + decFormat.format(evaluator.getFMeasure().getRecallScore()) + ")";
+                LOG.info("Validation: " + result);
+            } catch (IOException ex) {
+                LOG.error("Error while opening training file: " + fileIn, ex);
+                throw new RuntimeException(ex);
+            } catch (Exception ex) {
+                LOG.error("Error while evaluating " + MODEL_NAME + " model.", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+          result = test(this.fileValidate, new NameFinderME((TokenNameFinderModel) model));
+        }
+
+        return result;*/
+    }
+
+    public String test(String file/*, NameFinderME modelME*/) {
+        String result = "";
+        AbstractSequenceClassifier<CoreLabel> model = loadClassifier();
+
+        System.out.println("\n---");
+        try {
+            Triple<Double,Double,Double> scores = model.classifyAndWriteAnswers(file, true);
+            System.out.println(scores.first()); // precision
+            System.out.println(scores.second()); // recall
+            System.out.println(scores.third()); // F1 score
+        } catch (IOException ex) {
+            LOG.error("Couldn't open test file " + file + ". " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+
+        /*System.out.println("\n---");
+        try {
+            String fileContents = IOUtils.slurpFile(file);
+            List<List<CoreLabel>> out = model.classify(fileContents);
+            for (List<CoreLabel> sentence : out) {
+                for (CoreLabel word : sentence) {
+                    System.out.print(word.word() + '/' + word.get(CoreAnnotations.AnswerAnnotation.class) + ' ');
+                }
+                System.out.println();
+            }
+        } catch (IOException ex) {
+            LOG.error("Could not open file " + file + ". " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }*/
+
+        /*System.out.println("\n---");
+        List<List<CoreLabel>> out = model.classifyFile(file); //
+        for (List<CoreLabel> sentence : out) {
+            for (CoreLabel word : sentence) {
+                System.out.print(word.word() + '/' + word.get(CoreAnnotations.AnswerAnnotation.class) + ' ');
+                //System.out.println("  * " + word.word());
+                //System.out.print("  ** " + word.get(CoreAnnotations.AnswerAnnotation.class) + '\n');
+            }
+            System.out.println();
+        }
+        System.out.println();*/
+
+        /*String S1 = "Good afternoon Rajat Raina, how are you today?";
+        String S2 = "I go to school at Stanford University, which is located in California.";
+        System.out.println(model.classifyToString(S1));
+        System.out.println(model.classifyWithInlineXML(S2));
+        System.out.println(model.classifyToString(S2, "xml", true));*/
+
+        /*try (ObjectStream<String> lineStreamValidate = openFile(file); NameSampleDataStream sampleStreamValidate = new NameSampleDataStream(lineStreamValidate)) {
+            LOG.info("Testing of " + MODEL_NAME + " started ...");
+            //TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(new NameFinderME((TokenNameFinderModel) model));
+            TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(modelME);
+            evaluator.evaluate(sampleStreamValidate);
+            result = "F = " + decFormat.format(evaluator.getFMeasure().getFMeasure())
+                    + " (Precision = " + decFormat.format(evaluator.getFMeasure().getPrecisionScore())
+                    + ", Recall = " + decFormat.format(evaluator.getFMeasure().getRecallScore()) + ")";
+            LOG.info("Testing result: " + result);
+        } catch (IOException ex) {
+            LOG.error("Error while opening test file: " + file, ex);
+            throw new RuntimeException("Error while testing " + MODEL_NAME + " model " + modelDescr, ex);
+        } catch (Exception ex) {
+            LOG.error("Error while testing " + this.MODEL_NAME + " model.", ex);
+        }*/
+
+        return result;
+    }
+
+    private Properties processPropertiesFile(String path) {
+        LOG.info("In processPropertiesFile()");
+        if (path == null || path.isEmpty())
+            path = this.DEFAULT_PROPERTIES_FILE;
+        LOG.info("Properties file: " + path);
+
+        InputStream is = openFile(path);
+
+        Properties prop = new Properties();
+        try {
+            prop.load(is);
+        } catch (IOException ex) {
+            LOG.error("Unable to load properties. " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+
+        try {
+            is.close();
+        } catch (IOException ex) {
+            LOG.error("Unable to close properties file. " + ex.getMessage());
+        }
+
+        return prop;
+    }
+
+    private Properties processPropertiesFile() {
+        return processPropertiesFile(this.DEFAULT_PROPERTIES_FILE);
+    }
+
+    private InputStream openFile(String path) {
+        InputStream is;
+        try {
+            if (path.startsWith("file://")) {
+                is = new FileInputStream(new File(new URI(path)));
+            } else if (path.startsWith("/")) {
+                is = new FileInputStream(new File(path));
+            } else {
+                is = this.getClass().getResourceAsStream(path);
+            }
+        } catch (FileNotFoundException ex) {
+            LOG.error("Unable to load file " + path + ". File not found. " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        } catch (URISyntaxException ex) {
+            LOG.error("Unable to load file " + path + ". " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+        return is;
+    }
+
+    private AbstractSequenceClassifier<CoreLabel> loadClassifier() {
+        String serializedClassifier = props.getProperty("serializeTo");
+        AbstractSequenceClassifier<CoreLabel> classifier;
+        try {
+            classifier = CRFClassifier.getClassifier(serializedClassifier);
+        } catch (IOException | ClassNotFoundException ex) {
+            LOG.error("Couldn't load classifier " + serializedClassifier + ". " + ex.getMessage());
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+        LOG.info("Classifier " + serializedClassifier + " successfully processed.");
+        return classifier;
+    }
+}

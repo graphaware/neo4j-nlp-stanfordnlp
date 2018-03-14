@@ -20,6 +20,7 @@ import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.processor.stanford.model.NERModelTool;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -301,7 +302,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = backgroundSymbol;
-                        currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
@@ -750,10 +751,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return result;
     }
 
-    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params) {
-        throw new UnsupportedOperationException("Method train() not implemented yet (StanfordNLP Text Processor).");
-    }
-
     class TokenHolder {
 
         private String ne;
@@ -1018,16 +1015,22 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     @Override
     public String train(String alg, String modelId, String file, String lang, Map<String, Object> params) {
-        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
+        LOG.info("Training of " + alg + " with id " + modelId + " started.");
+        String propFile = null;
+        if (params != null && params.containsKey("propertiesFile"))
+            propFile = (String) params.get("propertiesFile");
+        LOG.info("Initialising ...");
+        NERModelTool nerModel = new NERModelTool(file, modelId, lang, propFile);
+        nerModel.train();
+        return "success";
     }
 
     @Override
     public String test(String alg, String modelId, String file, String lang) {
-        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
-    }
-
-    public String test(String project, String alg, String model, String file, String lang) {
-        throw new UnsupportedOperationException("Method test() not implemented yet (StanfordNLP Text Processor).");
+        LOG.info("Testing of " + alg + " with id " + modelId + " started.");
+        NERModelTool nerModel = new NERModelTool(modelId, lang);
+        nerModel.test(file);
+        return "success";
     }
 
     protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
