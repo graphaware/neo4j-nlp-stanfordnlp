@@ -14,6 +14,7 @@ import java.util.Properties;
 import java.util.Map;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,7 @@ public class NERModelTool {
 
     private static final String MODEL_NAME = "NER";
     private static final String DEFAULT_PROPERTIES_FILE = "ner-config.properties";
+    private static final DecimalFormat decFormat = new DecimalFormat("#0.00"); // for formating validation results with precision 2 decimals
     private final String modelDescr;
     private String entityType;
     //private AbstractSequenceClassifier<CoreLabel> model;
@@ -62,7 +64,7 @@ public class NERModelTool {
 
     public NERModelTool(String modelDescr, String lang) { this(null, modelDescr, lang, null); }
 
-    public void train() {
+    public void train(String modelPath) {
         SeqClassifierFlags flags = new SeqClassifierFlags(props);
         CRFClassifier<CoreLabel> model = new CRFClassifier<CoreLabel>(flags);
         LOG.info("Starting the training ...");
@@ -70,7 +72,8 @@ public class NERModelTool {
         LOG.info("Training finished!");
 
         // Save the model
-        String modelPath = props.getProperty("serializeTo");
+        if (modelPath == null || modelPath.isEmpty())
+            modelPath = props.getProperty("serializeTo");
         model.serializeClassifier(modelPath);
         LOG.info("Model saved to " + modelPath);
     }
@@ -104,16 +107,20 @@ public class NERModelTool {
         return result;*/
     }
 
-    public String test(String file/*, NameFinderME modelME*/) {
+    public String test(String file, String modelPath) {
         String result = "";
-        AbstractSequenceClassifier<CoreLabel> model = loadClassifier();
+        AbstractSequenceClassifier<CoreLabel> model = loadClassifier(modelPath);
 
-        System.out.println("\n---");
         try {
+            System.out.println("\n---");
             Triple<Double,Double,Double> scores = model.classifyAndWriteAnswers(file, true);
-            System.out.println(scores.first()); // precision
-            System.out.println(scores.second()); // recall
-            System.out.println(scores.third()); // F1 score
+            result = "F = " + decFormat.format(scores.third())
+                    + " (Precision = " + decFormat.format(scores.first())
+                    + ", Recall = " + decFormat.format(scores.second()) + ")";
+            System.out.println("\n --- " + result);
+            //System.out.println("  Precision = " + scores.first()); // precision
+            //System.out.println("  Recall = " + scores.second()); // recall
+            //System.out.println("  F1 = " + scores.third()); // F1 score
         } catch (IOException ex) {
             LOG.error("Couldn't open test file " + file + ". " + ex.getMessage());
             ex.printStackTrace();
@@ -153,22 +160,6 @@ public class NERModelTool {
         System.out.println(model.classifyToString(S1));
         System.out.println(model.classifyWithInlineXML(S2));
         System.out.println(model.classifyToString(S2, "xml", true));*/
-
-        /*try (ObjectStream<String> lineStreamValidate = openFile(file); NameSampleDataStream sampleStreamValidate = new NameSampleDataStream(lineStreamValidate)) {
-            LOG.info("Testing of " + MODEL_NAME + " started ...");
-            //TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(new NameFinderME((TokenNameFinderModel) model));
-            TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(modelME);
-            evaluator.evaluate(sampleStreamValidate);
-            result = "F = " + decFormat.format(evaluator.getFMeasure().getFMeasure())
-                    + " (Precision = " + decFormat.format(evaluator.getFMeasure().getPrecisionScore())
-                    + ", Recall = " + decFormat.format(evaluator.getFMeasure().getRecallScore()) + ")";
-            LOG.info("Testing result: " + result);
-        } catch (IOException ex) {
-            LOG.error("Error while opening test file: " + file, ex);
-            throw new RuntimeException("Error while testing " + MODEL_NAME + " model " + modelDescr, ex);
-        } catch (Exception ex) {
-            LOG.error("Error while testing " + this.MODEL_NAME + " model.", ex);
-        }*/
 
         return result;
     }
@@ -225,17 +216,19 @@ public class NERModelTool {
         return is;
     }
 
-    private AbstractSequenceClassifier<CoreLabel> loadClassifier() {
-        String serializedClassifier = props.getProperty("serializeTo");
+    private AbstractSequenceClassifier<CoreLabel> loadClassifier(String modelPath) {
+        if (modelPath == null || modelPath.isEmpty())
+            modelPath = props.getProperty("serializeTo");
         AbstractSequenceClassifier<CoreLabel> classifier;
         try {
-            classifier = CRFClassifier.getClassifier(serializedClassifier);
+            classifier = CRFClassifier.getClassifier(modelPath);
         } catch (IOException | ClassNotFoundException ex) {
-            LOG.error("Couldn't load classifier " + serializedClassifier + ". " + ex.getMessage());
+            LOG.error("Couldn't load classifier " + modelPath + ". " + ex.getMessage());
             ex.printStackTrace();
             throw new RuntimeException(ex);
         }
-        LOG.info("Classifier " + serializedClassifier + " successfully processed.");
+        LOG.info("Classifier " + modelPath + " successfully processed.");
         return classifier;
     }
+
 }

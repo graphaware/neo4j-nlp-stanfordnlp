@@ -131,6 +131,7 @@ public class PipelineBuilder {
 
     public StanfordCoreNLP build() {
         properties.setProperty("annotators", annotators.toString());
+        //properties.setProperty("ner.model", customNEs.toString());
         properties.setProperty("threads", String.valueOf(threadsNumber));
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
         return pipeline;

@@ -186,27 +186,30 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(CORE_PIPELINE_NAME);
+
+        // Add custom NER models
+        if (pipelineSpecification.hasProcessingStep("customNER")) {
+            pipeline.getProperties().setProperty("ner.model", pipelineSpecification.getProcessingStepAsString("customNER"));
+            LOG.info("Custom NER(s) set to: " + pipelineSpecification.getProcessingStepAsString("customNER"));
+        }
+
+        // Add stopwords list
+        String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
         if (pipelineSpecification.getStopWords() != null) {
             String customStopWordList = pipelineSpecification.getStopWords();
-            String stopWordList;
             if (customStopWordList.startsWith("+")) {
-                stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST + "," + customStopWordList.replace("+,", "").replace("+", "");
+                stopWordList += "," + customStopWordList.replace("+,", "").replace("+", "");
             } else {
                 stopWordList = customStopWordList;
             }
-            pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
-            String annotatorName = "customAnnotatorClass.stopword";
-            pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
-            pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
-        } else {
-            String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
-            pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
-            String annotatorName = "customAnnotatorClass.stopword";
-            pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
-            pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
         }
+        pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
+        String annotatorName = "customAnnotatorClass.stopword";
+        pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
+        pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
 
         pipeline.addAnnotator(new StopwordAnnotator(getClass().getName(), pipeline.getProperties()));
+
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
@@ -914,8 +917,8 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         //@todo create constants for processing steps
         String name = pipelineSpecification.getName();
 //        PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
-        List<String> specActive = new ArrayList<>();
         List<String> stopwordsList;
+        List<String> specActive = new ArrayList<>();
 
         if (pipelineSpecification.hasProcessingStep("tokenize", true)) {
 //            pipelineBuilder.tokenize();
@@ -943,8 +946,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
 
         String stopWords = pipelineSpecification.getStopWords() != null ? pipelineSpecification.getStopWords() : "default";
-        boolean checkLemma = pipelineSpecification.hasProcessingStep("checkLemmaIsStopWord");
-        if (checkLemma) {
+        if (pipelineSpecification.hasProcessingStep("checkLemmaIsStopWord")) {
             specActive.add("checkLemmaIsStopWord");
         }
         if (stopWords.equalsIgnoreCase("default")) {
@@ -970,13 +972,23 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         Long threadNumber = pipelineSpecification.getThreadNumber() != 0 ? pipelineSpecification.getThreadNumber() : 4L;
 //        pipelineBuilder.threadNumber(threadNumber.intValue());
 
+        Map<String, Object> specMap = buildSpecifications(specActive);
+        if (pipelineSpecification.hasProcessingStep("customNER")) {
+            if (!specActive.contains("ner")) { // without "ner", annotation doesn't work (only sentences get extracted, but no tags!)
+//                pipelineBuilder.extractNEs();
+                specActive.add("ner");
+            }
+            specMap.put("customNER", pipelineSpecification.getProcessingStepAsString("customNER"));
+//            pipelineBuilder.extractCustomNEs(pipelineSpecification.getProcessingStepAsString("customNER"));
+        }
+
         StanfordCoreNLP pipeline = pipelines.get(CORE_PIPELINE_NAME);
         pipelines.put(name, pipeline);
         PipelineInfo pipelineInfo = new PipelineInfo(
                 name,
                 this.getClass().getName(),
                 getPipelineProperties(pipeline),
-                buildSpecifications(specActive),
+                specMap,
                 Integer.valueOf(threadNumber.toString()),
                 stopwordsList
         );
@@ -1004,7 +1016,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     }
 
     protected Map<String, Object> buildSpecifications(List<String> actives) {
-        List<String> all = Arrays.asList("tokenize", "ner", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase");
+        List<String> all = Arrays.asList("tokenize", "ner", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase", "customNER");
         Map<String, Object> specs = new HashMap<>();
         all.forEach(s -> {
             specs.put(s, actives.contains(s));
@@ -1021,16 +1033,15 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             propFile = (String) params.get("propertiesFile");
         LOG.info("Initialising ...");
         NERModelTool nerModel = new NERModelTool(file, modelId, lang, propFile);
-        nerModel.train();
-        return "success";
+        nerModel.train(createModelFileName(lang, alg, modelId));
+        return "Training successful.";
     }
 
     @Override
     public String test(String alg, String modelId, String file, String lang) {
         LOG.info("Testing of " + alg + " with id " + modelId + " started.");
         NERModelTool nerModel = new NERModelTool(modelId, lang);
-        nerModel.test(file);
-        return "success";
+        return nerModel.test(file, createModelFileName(lang, alg, modelId));
     }
 
     protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
@@ -1039,5 +1050,18 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
 
         return currTokenTokenIds;
+    }
+
+    private String createModelFileName(String lang, String alg, String model) {
+        String delim = "-";
+        //String name = "import/" + lang.toLowerCase() + delim + alg.toLowerCase();
+        String name = "import/" + alg.toLowerCase();
+        if (model != null) {
+            if (model.length() > 0) {
+                name += delim + model.toLowerCase();
+            }
+        }
+        name += ".gz";
+        return name;
     }
 }
