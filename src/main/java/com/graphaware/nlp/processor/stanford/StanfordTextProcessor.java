@@ -187,8 +187,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(CORE_PIPELINE_NAME);
 
-System.out.println("\n >>> In main annotateText()\n");
-
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
             pipeline.getProperties().setProperty("ner.model", createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
@@ -246,8 +244,6 @@ System.out.println("\n >>> In main annotateText()\n");
 
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters) {
-System.out.println("\n >>> In side-ways annotateText()\n");
-
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(pipelineName);
