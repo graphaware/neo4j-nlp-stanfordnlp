@@ -187,10 +187,12 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = getPipeline(CORE_PIPELINE_NAME);
 
+System.out.println("\n >>> In main annotateText()\n");
+
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
-            pipeline.getProperties().setProperty("ner.model", pipelineSpecification.getProcessingStepAsString("customNER"));
-            LOG.info("Custom NER(s) set to: " + pipelineSpecification.getProcessingStepAsString("customNER"));
+            pipeline.getProperties().setProperty("ner.model", createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
+            LOG.info("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
         }
 
         // Add stopwords list
@@ -217,7 +219,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
 
-            if (pipelineSpecification.hasProcessingStep(STEP_NER, true)) {
+            if (pipelineSpecification.hasProcessingStep(STEP_NER, true) || pipelineSpecification.hasProcessingStep("customNER")) {
                 extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER());
             }
 
@@ -244,6 +246,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters) {
+System.out.println("\n >>> In side-ways annotateText()\n");
 
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
@@ -971,14 +974,20 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         }
         Long threadNumber = pipelineSpecification.getThreadNumber() != 0 ? pipelineSpecification.getThreadNumber() : 4L;
 //        pipelineBuilder.threadNumber(threadNumber.intValue());
-
-        Map<String, Object> specMap = buildSpecifications(specActive);
         if (pipelineSpecification.hasProcessingStep("customNER")) {
             if (!specActive.contains("ner")) { // without "ner", annotation doesn't work (only sentences get extracted, but no tags!)
 //                pipelineBuilder.extractNEs();
                 specActive.add("ner");
             }
-            specMap.put("customNER", pipelineSpecification.getProcessingStepAsString("customNER"));
+        }
+
+        Map<String, Object> specMap = buildSpecifications(specActive);
+        LOG.info(" >>>>>>> Creating pipeline");
+        if (pipelineSpecification.hasProcessingStep("customNER")) {
+            LOG.info(" >>>>>>>   Adding " + pipelineSpecification.getProcessingStepAsString("customNER"));
+            LOG.info(" >>>>>>>   File: " + createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
+            System.out.println("\n >>>>>>>>>>>> Adding customNER to the pipeline: " + createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
+            specMap.put("customNER", pipelineSpecification.getProcessingStepAsString("customNER")); // here must be provided _path_ to the model file
 //            pipelineBuilder.extractCustomNEs(pipelineSpecification.getProcessingStepAsString("customNER"));
         }
 
@@ -1033,7 +1042,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             propFile = (String) params.get("propertiesFile");
         LOG.info("Initialising ...");
         NERModelTool nerModel = new NERModelTool(file, modelId, lang, propFile);
-        nerModel.train(createModelFileName(lang, alg, modelId));
+        nerModel.train(createModelFileName(alg, modelId));
         return "Training successful.";
     }
 
@@ -1041,7 +1050,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public String test(String alg, String modelId, String file, String lang) {
         LOG.info("Testing of " + alg + " with id " + modelId + " started.");
         NERModelTool nerModel = new NERModelTool(modelId, lang);
-        return nerModel.test(file, createModelFileName(lang, alg, modelId));
+        return nerModel.test(file, createModelFileName(alg, modelId));
     }
 
     protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {
@@ -1052,16 +1061,14 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         return currTokenTokenIds;
     }
 
-    private String createModelFileName(String lang, String alg, String model) {
+    private String createModelFileName(String alg, String model) {
         String delim = "-";
         //String name = "import/" + lang.toLowerCase() + delim + alg.toLowerCase();
         String name = "import/" + alg.toLowerCase();
-        if (model != null) {
-            if (model.length() > 0) {
-                name += delim + model.toLowerCase();
-            }
+        if (model != null && !model.isEmpty()) {
+            name += delim + model.toLowerCase();
         }
-        name += ".gz";
+        name += ".ser.gz";
         return name;
     }
 }

@@ -155,10 +155,15 @@ public class NERModelTool {
         }
         System.out.println();*/
 
-        /*String S1 = "Good afternoon Rajat Raina, how are you today?";
+        String S1 = "James Trescothick, senior global strategist, said there is the potential.";
         String S2 = "I go to school at Stanford University, which is located in California.";
+        String S3 = "Vega 1 is currently in heliocentric orbit, with perihelion of 0.70 AU, aphelion of 0.98 AU and orbital period of 281 days.";
+        String S4 = "It defines a heliospheric mission for ICE consisting of investigations of coronal mass ejections in coordination with ground-based observations, continued cosmic rays studies, and the Ulysses probe.";
         System.out.println(model.classifyToString(S1));
-        System.out.println(model.classifyWithInlineXML(S2));
+        System.out.println(model.classifyToString(S2));
+        System.out.println(model.classifyToString(S3));
+        System.out.println(model.classifyToString(S4));
+        /*System.out.println(model.classifyWithInlineXML(S2));
         System.out.println(model.classifyToString(S2, "xml", true));*/
 
         return result;
