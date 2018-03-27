@@ -31,6 +31,14 @@ public class PipelineBuilder {
         annotators.append("ner");
         return this;
     }
+
+    public PipelineBuilder extractNEs(String modelPath) {
+        checkForExistingAnnotators();
+        annotators.append("ner");
+        properties.setProperty("ner.model", modelPath);
+
+        return this;
+    }
     
     public PipelineBuilder cleanxml() {
         checkForExistingAnnotators();

@@ -185,12 +185,22 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
-        StanfordCoreNLP pipeline = getPipeline(CORE_PIPELINE_NAME);
+        StanfordCoreNLP pipeline = null;
 
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
-            pipeline.getProperties().setProperty("ner.model", createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
+            String modelPath = getClass().getClassLoader().getResource("ner-test-ner.ser.gz").getPath();
+            pipeline = new PipelineBuilder(pipelineSpecification.getName())
+                    .tokenize()
+                    .extractNEs(modelPath)
+                    .defaultStopWordAnnotator()
+                    .build();
+            String modelName = pipelineSpecification.getProcessingStepAsString("customNER");
+            pipeline.getProperties().setProperty("ner.model", modelPath);
             LOG.info("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
+            System.out.println("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
+        } else {
+            pipeline = pipelines.get(CORE_PIPELINE_NAME);
         }
 
         // Add stopwords list
@@ -218,7 +228,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_NER, true) || pipelineSpecification.hasProcessingStep("customNER")) {
-                extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER());
+                extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER(), pipelineSpecification);
             }
 
             if (pipelineSpecification.hasProcessingStep(STEP_SENTIMENT, false)) {
@@ -294,7 +304,8 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
         newSentence.setSentiment(score);
     }
 
-    protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence, List<String> excludedNER) {
+    protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence, List<String> excludedNER, PipelineSpecification pipelineSpecification) {
+
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
@@ -304,7 +315,9 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = backgroundSymbol;
-                    currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    if (pipelineSpecification.hasProcessingStep(STEP_NER, true) || pipelineSpecification.hasProcessingStep("customNER")) {
+                        currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    }
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
                         if (currToken.getToken().length() > 0) {
@@ -423,7 +436,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = backgroundSymbol;
-                    if (pipelineInfos.get(pipelineName).getSpecifications().containsKey("ner") && pipelineInfos.get(pipelineName).getSpecifications().get("ner").equals(true))
+                    if (pipelineInfos.get(pipelineName).getSpecifications().containsKey("customNer") && pipelineInfos.get(pipelineName).getSpecifications().get("ner").equals(true))
                         currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
@@ -1060,7 +1073,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     private String createModelFileName(String alg, String model) {
         String delim = "-";
         //String name = "import/" + lang.toLowerCase() + delim + alg.toLowerCase();
-        String name = "import/" + alg.toLowerCase();
+        String name = alg.toLowerCase();
         if (model != null && !model.isEmpty()) {
             name += delim + model.toLowerCase();
         }
