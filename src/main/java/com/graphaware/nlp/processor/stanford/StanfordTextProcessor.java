@@ -185,7 +185,7 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
-        StanfordCoreNLP pipeline = null;
+        StanfordCoreNLP pipeline = pipelines.get(CORE_PIPELINE_NAME);
 
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
@@ -199,8 +199,6 @@ public class StanfordTextProcessor extends  AbstractTextProcessor {
             pipeline.getProperties().setProperty("ner.model", modelPath);
             LOG.info("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
             System.out.println("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
-        } else {
-            pipeline = pipelines.get(CORE_PIPELINE_NAME);
         }
 
         // Add stopwords list
