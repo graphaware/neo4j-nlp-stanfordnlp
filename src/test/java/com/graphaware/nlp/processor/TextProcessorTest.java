@@ -33,11 +33,18 @@ import static com.graphaware.nlp.util.TagUtils.newTag;
 public class TextProcessorTest {
 
     private static TextProcessor textProcessor;
+    private static PipelineSpecification PIPELINE_DEFAULT;
 
     @BeforeClass
     public static void init() {
         textProcessor = new StanfordTextProcessor();
         textProcessor.init();
+        Map<String, Object> processingSteps = new HashMap<>();
+        processingSteps.put(AbstractTextProcessor.STEP_TOKENIZE, true);
+        processingSteps.put(AbstractTextProcessor.STEP_NER, true);
+        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
+        PIPELINE_DEFAULT = pipelineSpecification;
+        textProcessor.createPipeline(PIPELINE_DEFAULT);
     }
 
     @Test
@@ -52,7 +59,7 @@ public class TextProcessorTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", "tokenizer", "en", null);
+                + "the outcome of the election was exactly as we predicted.", "en", PIPELINE_DEFAULT);
 
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
@@ -68,7 +75,7 @@ public class TextProcessorTest {
     @Test
     public void testLemmaLowerCasing() {
         String testText = "Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset";
-        AnnotatedText annotatedText = textProcessor.annotateText(testText, TOKENIZER, "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(testText, "en", PIPELINE_DEFAULT);
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
 
         test.assertSentencesCount(1);
@@ -77,7 +84,7 @@ public class TextProcessorTest {
         PipelineSpecification pipelineSpecification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
         pipelineSpecification.addProcessingStep("truecase");
         textProcessor.createPipeline(pipelineSpecification);
-        annotatedText = textProcessor.annotateText(testText, "tokenizeWithTrueCase", "en", null);
+        annotatedText = textProcessor.annotateText(testText, "en", pipelineSpecification);
 
         test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(1);
@@ -87,9 +94,9 @@ public class TextProcessorTest {
     }
     
     @Test
-    public void testLemmaSprittingByPunctuation() {
+    public void testLemmaSplittingByPunctuation() {
         String testText = "Ser Emmon Cuy, Ser Robar Royce, Ser Parmen Crane, they'd sworn as well.";
-        AnnotatedText annotateText = textProcessor.annotateText(testText, TOKENIZER, "en", null);
+        AnnotatedText annotateText = textProcessor.annotateText(testText, "en", PIPELINE_DEFAULT);
 
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(6, annotateText.getSentences().get(0).getTags().size());
@@ -97,7 +104,7 @@ public class TextProcessorTest {
 
     @Test
     public void testAnnotatedTag() {
-        Tag annotateTag = textProcessor.annotateTag("winners", "en");
+        Tag annotateTag = textProcessor.annotateTag("winners", "en", PIPELINE_DEFAULT);
         assertEquals(annotateTag.getLemma(), "winner");
     }
 
@@ -159,7 +166,7 @@ public class TextProcessorTest {
         specification.addProcessingStep("truecase");
         specification.addProcessingStep("sentiment");
         specification.addProcessingStep("coref");
-        specification.addProcessingStep("relations");
+//        specification.addProcessingStep("relations");
         textProcessor.createPipeline(specification);
         AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
@@ -171,7 +178,7 @@ public class TextProcessorTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", "tokenizeWithTrueCase", "en", null);
+                + "the outcome of the election was exactly as we predicted.", "en", specification);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);
@@ -199,7 +206,7 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedShortText() {
-        AnnotatedText annotatedText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", "tokenizer", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", "en", PIPELINE_DEFAULT);
 
         assertEquals(1, annotatedText.getSentences().size());
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
@@ -209,7 +216,7 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedShortText2() {
-        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", "tokenizer", "en", null);
+        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", "en", PIPELINE_DEFAULT);
         assertEquals(1, annotateText.getSentences().size());
     }
 
@@ -220,7 +227,7 @@ public class TextProcessorTest {
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
@@ -230,7 +237,7 @@ public class TextProcessorTest {
     @Test
     public void testWithOneThousandthDollar() {
         String text = "monetary units of mill or one-thousandth of a dollar (symbol ₥)";
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "tokenizer", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", PIPELINE_DEFAULT);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
@@ -244,7 +251,7 @@ public class TextProcessorTest {
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
 
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertTagWithLemma("the");
@@ -253,7 +260,7 @@ public class TextProcessorTest {
 
     @Test
     public void testTypedDependenciesAreFound() {
-        AnnotatedText annotatedText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", "tokenizer", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", "en", PIPELINE_DEFAULT);
         // @todo add some test here
 
     }
@@ -265,7 +272,7 @@ public class TextProcessorTest {
         specification.addProcessingStep("dependency");
         specification.setStopWords("start,starts");
         textProcessor.createPipeline(specification);
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "custom", "en", null);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);

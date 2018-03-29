@@ -1,38 +1,25 @@
 package com.graphaware.nlp.integration;
 
-import com.graphaware.nlp.NLPIntegrationTest;
-import com.graphaware.nlp.configuration.SettingsConstants;
-import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.StanfordNLPIntegrationTest;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.reflections.Reflections;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
+public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
 
-    @Override
-    protected void registerProceduresAndFunctions(Procedures procedures) throws Exception {
-        super.registerProceduresAndFunctions(procedures);
-        Reflections reflections = new Reflections("com.graphaware.nlp.dsl");
-        Set<Class<? extends AbstractDSL>> cls = reflections.getSubTypesOf(AbstractDSL.class);
-        for (Class c : cls) {
-            try {
-                procedures.registerProcedure(c);
-                procedures.registerFunction(c);
-            } catch (Exception e) {
-                //
-            }
-        }
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'tokenizer',textProcessor:{processor}, processingSteps:{tokenize:true}})", Collections.singletonMap("processor", StanfordTextProcessor.class.getName()), emptyConsumer());
     }
 
     @Test
@@ -40,7 +27,7 @@ public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text:'Barack Obama is born in Hawaii. He is our president.', textProcessor:'"+StanfordTextProcessor.class.getName()+"' " +
                 ", checkLanguage: true, pipeline: 'tokenizer', id:'test'}) YIELD result RETURN result", (result -> {
-                    assertTrue(result.hasNext());
+            assertTrue(result.hasNext());
         }) );
     }
 
@@ -63,13 +50,12 @@ public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
     @Test
     public void testAnnotationWithPipelineFromUserConfig() {
         clearDb();
-        getNLPManager().getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, TextProcessor.DEFAULT_PIPELINE);
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name:\"customie\", stopWords:\"hello,build\", textProcessor:'"+ StanfordTextProcessor.class.getName() +"', processingSteps:{tokenize:true, dependency:true, coref: false}})", (result -> {
             assertTrue(result.hasNext());
         }));
         String text = "Neo4j is built from the ground up to be a graph database.";
         try (Transaction tx = getDatabase().beginTx()) {
-            getNLPManager().annotateTextAndPersist(text, "test", StanfordTextProcessor.class.getName(), null, false, false);
+            getNLPManager().annotateTextAndPersist(text, "test", StanfordTextProcessor.class.getName(), "customie", false, false);
             tx.success();
         }
         executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {
@@ -144,5 +130,4 @@ public class StanfordNLPIntegrationTest extends NLPIntegrationTest {
             }
         }));
     }
-
 }

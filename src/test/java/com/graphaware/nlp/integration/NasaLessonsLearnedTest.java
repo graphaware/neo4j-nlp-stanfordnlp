@@ -1,11 +1,10 @@
 package com.graphaware.nlp.integration;
 
+import com.graphaware.nlp.StanfordNLPIntegrationTest;
 import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
 
