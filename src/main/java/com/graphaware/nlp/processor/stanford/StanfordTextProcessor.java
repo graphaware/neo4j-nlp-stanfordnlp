@@ -15,11 +15,13 @@
  */
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.model.NERModelTool;
+import com.graphaware.nlp.util.FileUtils;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -32,25 +34,24 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
-import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
+import org.neo4j.logging.Log;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 
 @NLPTextProcessor(name = "StanfordTextProcessor")
 public class StanfordTextProcessor extends AbstractTextProcessor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
     protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
     private static final String STEP_RELATIONS = "relations";
 
@@ -119,35 +120,16 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
-            String modelPath = getClass().getClassLoader().getResource("ner-test-ner.ser.gz").getPath();
+            String modelPath = getModelLocation(pipelineSpecification.getProcessingStepAsString("customNER"));
             pipeline = new PipelineBuilder(pipelineSpecification.getName())
                     .tokenize()
                     .extractNEs(modelPath)
                     .defaultStopWordAnnotator()
                     .build();
-            String modelName = pipelineSpecification.getProcessingStepAsString("customNER");
             pipeline.getProperties().setProperty("ner.model", modelPath);
             LOG.info("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
             System.out.println("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
         }
-
-        // Add stopwords list
-        String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
-        if (pipelineSpecification.getStopWords() != null) {
-            String customStopWordList = pipelineSpecification.getStopWords();
-            if (customStopWordList.startsWith("+")) {
-                stopWordList += "," + customStopWordList.replace("+,", "").replace("+", "");
-            } else {
-                stopWordList = customStopWordList;
-            }
-        }
-
-        pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
-        String annotatorName = "customAnnotatorClass.stopword";
-        pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
-        pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
-
-        pipeline.addAnnotator(new StopwordAnnotator(getClass().getName(), pipeline.getProperties()));
 
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -190,10 +172,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         extractedPhrases.stream().forEach((holder) -> {
             newSentence.addPhraseOccurrence(holder.getBeginPosition(), holder.getEndPosition(), new Phrase(holder.getPhrase()));
         });
-    }
-
-    protected void extractPhrases(CoreMap sentence, Sentence newSentence, String pipelineName) {
-        extractPhrases(sentence, newSentence);
     }
 
     protected void extractSentiment(CoreMap sentence, final Sentence newSentence) {
@@ -711,6 +689,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
     @Override
     public void createPipeline(PipelineSpecification pipelineSpecification) {
+        if (pipelines.containsKey(pipelineSpecification.getName())) {
+            throw new RuntimeException("Pipeline " + pipelineSpecification.getName() + " already exist for processor " + StanfordTextProcessor.class.getName());
+        }
         //@todo create constants for processing steps
         String name = pipelineSpecification.getName();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
@@ -805,8 +786,12 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         if (params != null && params.containsKey("propertiesFile"))
             propFile = (String) params.get("propertiesFile");
         LOG.info("Initialising ...");
-        NERModelTool nerModel = new NERModelTool(file, modelId, lang, propFile);
-        nerModel.train(createModelFileName(alg, modelId));
+        String modelDir = getModelsWorkdir();
+        String trainFilePath = FileUtils.resolveFilePath(modelDir, file);
+        String modelPath = FileUtils.resolveFilePath(modelDir, createModelFileName(alg, modelId));
+        NERModelTool nerModel = new NERModelTool(trainFilePath, modelId, lang, propFile);
+        nerModel.train(modelPath);
+        storeModelLocation(modelId, modelPath);
         return "Training successful.";
     }
 
@@ -814,7 +799,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     public String test(String alg, String modelId, String file, String lang) {
         LOG.info("Testing of " + alg + " with id " + modelId + " started.");
         NERModelTool nerModel = new NERModelTool(modelId, lang);
-        return nerModel.test(file, createModelFileName(alg, modelId));
+        String testFilePath = FileUtils.resolveFilePath(getModelsWorkdir(), file);
+        return nerModel.test(testFilePath, getModelLocation(modelId));
     }
 
     protected List<String> getTokenIdsToUse(String tokenId, List<String> currTokenTokenIds) {

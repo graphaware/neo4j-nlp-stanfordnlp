@@ -162,7 +162,7 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedTextWithPosition() {
-        PipelineSpecification specification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("positionTest", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("truecase");
         specification.addProcessingStep("sentiment");
         specification.addProcessingStep("coref");
@@ -222,11 +222,11 @@ public class TextProcessorTest {
 
     @Test
     public void testAnnotatedQuestionWithNoStopwords() {
-        String text = "What is in front of the Notre Dame Main Building?";
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("question-no-sw", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
+        String text = "What is in front of the Notre Dame Main Building?";
         AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
 
         assertEquals(1, annotatedText.getSentences().size());
@@ -247,7 +247,7 @@ public class TextProcessorTest {
     @Test
     public void testPipelineWithCustomStopwordsDoNotAddNERDateToTheWord() {
         String text = "In addition to the dollar the coinage act officially established monetary units of mill or one-thousandth of a dollar (symbol ₥), cent or one-hundredth of a dollar (symbol ¢), dime or one-tenth of a dollar, and eagle or ten dollars, with prescribed weights and composition of gold, silver, or copper for each.";
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customx", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
@@ -267,11 +267,11 @@ public class TextProcessorTest {
     
     @Test
     public void testIssueWithBe() {
-        String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("issue-be", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
-        specification.setStopWords("start,starts");
+        specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
+        String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
         AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
 
         assertEquals(1, annotatedText.getSentences().size());
@@ -304,9 +304,9 @@ public class TextProcessorTest {
     @Test
     public void testAddPipelineTakesStopwordsIntoAccount() {
         String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customsw", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
-        String stopwords = "själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som, dess, skulle, våra, på, sådana, har, blivit, det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken, till, över, vår, är, jag, nu, sedan, hans, vid, vara, hur, min, här, sitta, än, ju, blev, ut, bli, sina, hennes, detta, oss, alla, någon, allt, utan, blir, några, åt, vårt, där, samma, inte, inom, hon, något, upp, honom, var, sig, vilket, vart, er, och, kunde, ej, vars, mot, men, ni, ha, din, ert, för, mina, vilka, så, kan, vem, man, en, icke, mitt, när, mycket, deras, mellan, om, dina, av";
+        String stopwords = "sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification.setStopWords("sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som");
         AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
         List<String> blacklist = Arrays.asList(stopwords.split(","));
@@ -318,7 +318,7 @@ public class TextProcessorTest {
     @Test
     public void testAddPipelineTakesStopwordsIntoAccountAfterNormalAnnotation() {
         String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customsw2", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         String stopwords = "sådan, själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification.setStopWords(stopwords);
@@ -328,14 +328,13 @@ public class TextProcessorTest {
             assertFalse(blacklist.contains(tag.getLemma()));
         });
 
-        PipelineSpecification specification2 = new PipelineSpecification("custom2", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification2 = new PipelineSpecification("customsw3", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         String stopwords2 = "eller, sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification2.setStopWords(stopwords2);
         AnnotatedText annotatedText2 = textProcessor.annotateText(text, "en", specification2);
         List<String> blacklist2 = Arrays.asList(stopwords2.split(","));
         annotatedText2.getTags().forEach(tag -> {
-            System.out.println(tag.getLemma());
             assertFalse(blacklist2.contains(tag.getLemma()));
         });
     }

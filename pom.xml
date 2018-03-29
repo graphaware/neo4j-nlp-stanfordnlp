@@ -63,8 +63,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.8.0</stanford.nlp.version>
-        <graphaware.version>3.3.2.51</graphaware.version>
-        <resttest.version>3.3.2.51.18</resttest.version>
+        <graphaware.version>3.3.2.52</graphaware.version>
+        <resttest.version>${graphaware.version}.18</resttest.version>
         <neo4j.version>3.3.2</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -185,10 +185,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.graphaware.neo4j</groupId>
+            <artifactId>common</artifactId>
+            <version>${graphaware.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
             <version>1.19.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.graphaware.neo4j</groupId>
+            <artifactId>common</artifactId>
+            <version>3.3.2.52</version>
         </dependency>
     </dependencies>
 

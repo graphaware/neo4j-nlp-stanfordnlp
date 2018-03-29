@@ -38,7 +38,6 @@ public class NERModelTool {
     private static final DecimalFormat decFormat = new DecimalFormat("#0.00"); // for formating validation results with precision 2 decimals
     private final String modelDescr;
     private String entityType;
-    //private AbstractSequenceClassifier<CoreLabel> model;
     private Properties props;
 
     private static final Logger LOG = LoggerFactory.getLogger(NERModelTool.class);
@@ -46,20 +45,11 @@ public class NERModelTool {
     public NERModelTool(String fileIn, String modelDescr, String lang, String propertiesFile) {
         this.entityType = null; // train only specific named entity; null = train all entities present in the training set
         this.modelDescr = modelDescr;
-        /*if (params != null) {
-            if (params.containsKey(GenericModelParameters.TRAIN_ENTITYTYPE)) {
-                this.entityType = (String) params.get(GenericModelParameters.TRAIN_ENTITYTYPE);
-            }
-        }*/
-
-        //this.props = StringUtils.propFileToProperties("/Users/vlasta/Documents/workspace/NLP/neo4j-nlp-stanfordnlp/src/main/resources/com/graphaware/nlp/processor/stanford/model/ner-config.properties");
         this.props = processPropertiesFile(propertiesFile);
-        if (fileIn != null && !fileIn.isEmpty())
+        if (fileIn != null && !fileIn.isEmpty()) {
             this.props.setProperty("trainFile", fileIn);
-    }
+        }
 
-    public NERModelTool(String fileIn, String modelDescr, String lang) {
-        this(fileIn, modelDescr, lang, null);
     }
 
     public NERModelTool(String modelDescr, String lang) { this(null, modelDescr, lang, null); }
@@ -67,13 +57,16 @@ public class NERModelTool {
     public void train(String modelPath) {
         SeqClassifierFlags flags = new SeqClassifierFlags(props);
         CRFClassifier<CoreLabel> model = new CRFClassifier<CoreLabel>(flags);
+
         LOG.info("Starting the training ...");
         model.train();
         LOG.info("Training finished!");
 
-        // Save the model
-        if (modelPath == null || modelPath.isEmpty())
-            modelPath = props.getProperty("serializeTo");
+        // @TODO: 29/03/2018 @vlasta when do we want to use a props file from disk instead of passing via procedure ?
+//        // Save the model
+//        if (modelPath == null || modelPath.isEmpty())
+//            modelPath = props.getProperty("serializeTo");
+
         model.serializeClassifier(modelPath);
         LOG.info("Model saved to " + modelPath);
     }
@@ -159,10 +152,10 @@ public class NERModelTool {
         String S2 = "I go to school at Stanford University, which is located in California.";
         String S3 = "Vega 1 is currently in heliocentric orbit, with perihelion of 0.70 AU, aphelion of 0.98 AU and orbital period of 281 days.";
         String S4 = "It defines a heliospheric mission for ICE consisting of investigations of coronal mass ejections in coordination with ground-based observations, continued cosmic rays studies, and the Ulysses probe.";
-        System.out.println(model.classifyToString(S1));
-        System.out.println(model.classifyToString(S2));
-        System.out.println(model.classifyToString(S3));
-        System.out.println(model.classifyToString(S4));
+//        System.out.println(model.classifyToString(S1));
+//        System.out.println(model.classifyToString(S2));
+//        System.out.println(model.classifyToString(S3));
+//        System.out.println(model.classifyToString(S4));
         /*System.out.println(model.classifyWithInlineXML(S2));
         System.out.println(model.classifyToString(S2, "xml", true));*/
 
