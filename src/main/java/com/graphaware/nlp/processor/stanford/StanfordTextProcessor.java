@@ -81,17 +81,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         return null;
     }
 
-    protected Map<String, Object> getPipelineProperties(StanfordCoreNLP pipeline) {
-        Map<String, Object> options = new HashMap<>();
-        for (Object o : pipeline.getProperties().keySet()) {
-            if (o instanceof String) {
-                options.put(o.toString(), pipeline.getProperties().getProperty(o.toString()));
-            }
-        }
-
-        return options;
-    }
-
     public StanfordCoreNLP getPipeline(String name) {
         if (name == null || name.isEmpty()) {
             name = TOKENIZER;
@@ -120,7 +109,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
         // Add custom NER models
         if (pipelineSpecification.hasProcessingStep("customNER")) {
-            String modelPath = getModelLocation(pipelineSpecification.getProcessingStepAsString("customNER"));
+            String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
             pipeline = new PipelineBuilder(pipelineSpecification.getName())
                     .tokenize()
                     .extractNEs(modelPath)
@@ -161,6 +150,15 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         });
 
         return result;
+    }
+
+    protected String getCustomModelsPaths(String modelIds) {
+        final List<String> modelPaths = new ArrayList<>();
+        Arrays.asList(modelIds.split(",")).forEach(id -> {
+            modelPaths.add(getModelLocation(id));
+        });
+
+        return org.apache.commons.lang3.StringUtils.join(modelPaths, ",");
     }
 
     protected void extractPhrases(CoreMap sentence, Sentence newSentence) {
