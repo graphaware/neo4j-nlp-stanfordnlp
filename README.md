@@ -110,3 +110,8 @@ Parameters:
 You can see the progress of the training in the neo4j log. It runs until convergence (there's no fixed number of iterations).
 
 To test the model, prepare an independent test file of the same structure as the training file. The test procedure will return to you an overall precision, recall and F1 score. For details, have a look at the neo4j log file. You'll find that the testing outputs your test data plus a third column representing predicted labels. It also prints out detailed statistics per class (you can train multiple NE classes from a single file).
+
+Finally, to use your new model during annotation, define a custom pipeline with `customNER` processing step (you can provide multiple custom models separated by `,`, for example: `nasa-missions,nasa-chemicals`):
+```
+CALL ga.nlp.processor.addPipeline({name: 'customNER', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: 'nasa-missions'}})
+```
