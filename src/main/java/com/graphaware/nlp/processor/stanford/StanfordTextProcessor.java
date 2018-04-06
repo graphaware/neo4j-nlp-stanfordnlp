@@ -56,12 +56,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     private static final String STEP_RELATIONS = "relations";
 
     public static final String TOKENIZER = "tokenizer";
-    public static final String XML_TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
-    public static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
-    public static final String PHRASE = "phrase";
-    public static final String DEPENDENCY_GRAPH = "tokenizerAndDependency";
-    public static final String IE = "ie";
 
     protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
     protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
@@ -142,6 +137,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY, false)) {
                 extractDependencies(sentence, newSentence);
             }
+
             if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS, false)) {
                 extractRelationship(result, sentences, document);
             }
@@ -693,26 +689,29 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         //@todo create constants for processing steps
         String name = pipelineSpecification.getName();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
-        List<String> stopwordsList;
 
-        if (pipelineSpecification.hasProcessingStep("tokenize", true)) {
+        if (pipelineSpecification.hasProcessingStep(STEP_TOKENIZE, true)) {
             pipelineBuilder.tokenize();
         }
 
-        if (pipelineSpecification.hasProcessingStep("ner", true)) {
+        if (pipelineSpecification.hasProcessingStep(STEP_NER, true)) {
             pipelineBuilder.extractNEs();
         }
 
-        if (pipelineSpecification.hasProcessingStep("cleanxml")) {
+        if (pipelineSpecification.hasProcessingStep(STEP_CLEAN_XML)) {
             pipelineBuilder.cleanxml();
         }
 
-        if (pipelineSpecification.hasProcessingStep("truecase")) {
+        if (pipelineSpecification.hasProcessingStep(STEP_TRUE_CASE)) {
             pipelineBuilder.truecase();
         }
 
-        if (pipelineSpecification.hasProcessingStep("dependency")) {
+        if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY)) {
             pipelineBuilder.dependencies();
+        }
+
+        if (pipelineSpecification.hasProcessingStep(STEP_IE)) {
+            pipelineBuilder.openIE();
         }
 
         String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
@@ -724,21 +723,19 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                 stopWordList = customStopWordList;
             }
         }
+
         boolean checkLemma = pipelineSpecification.hasProcessingStep("checkLemma", true);
         pipelineBuilder.customStopWordAnnotator(stopWordList, checkLemma);
-//        pipeline.getProperties().setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
-//        String annotatorName = "customAnnotatorClass.stopword";
-//        pipeline.getProperties().setProperty(annotatorName, StopwordAnnotator.class.getName());
-//        pipeline.getProperties().setProperty(StopwordAnnotator.CHECK_LEMMA, String.valueOf(true));
 
-        if (pipelineSpecification.hasProcessingStep("sentiment")) {
+
+        if (pipelineSpecification.hasProcessingStep(STEP_SENTIMENT)) {
             pipelineBuilder.extractSentiment();
         }
-        if (pipelineSpecification.hasProcessingStep("coref")) {
+        if (pipelineSpecification.hasProcessingStep(STEP_COREF)) {
             pipelineBuilder.extractCoref();
         }
 
-        if (pipelineSpecification.hasProcessingStep("relations")) {
+        if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS)) {
             pipelineBuilder.extractRelations();
         }
 
