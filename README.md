@@ -56,3 +56,57 @@ MATCH (result)-[:CONTAINS_SENTENCE]->(s:Sentence)
 RETURN labels(s) as labels
 ```
 
+### Custom Named Entity Recognition
+
+StanfordNLP allows to [train](https://nlp.stanford.edu/software/crf-faq.shtml) and use custom NE models. That requires large training dataset (in .tsv format) which is tokenized and labeled, for example:
+```
+The O
+name    O
+Apollo  MISSION
+1   MISSION
+,   O
+chosen  O
+by  O
+the O
+crew    O
+,   O
+was O
+officially  O
+retired O
+by  O
+NASA    O
+in  O
+commemoration   O
+of  O
+them    O
+on  O
+April   O
+24  O
+,   O
+1967    O
+.   O
+```
+(`O` is used as "no category", `MISSION` is a custom named entity that we want to learn to recognize)
+
+Start with defining working directory (it contains train & test files and the model is going to be serialized to this location):
+```
+CALL ga.nlp.config.model.workdir("/Users/DrWho/workdir/data/nasa")
+```
+
+Model can be trained (and subsequently tested) by:
+```
+// first train a model
+CALL ga.nlp.processor.train({textProcessor: "com.graphaware.nlp.processor.stanford.StanfordTextProcessor", alg: "ner", modelIdentifier: "nasa-missions", inputFile: "ner-missions.train.tsv"})
+
+// after that you can test it
+CALL ga.nlp.processor.test({textProcessor: "com.graphaware.nlp.processor.stanford.StanfordTextProcessor", alg: "ner", modelIdentifier: "nasa-missions", inputFile: "ner-missions.test.tsv"})
+```
+Parameters:
+* `textProcessor`
+* `alg`: algorith to train ("ner")
+* `modelIdentifier`: choose a unique identifier which is going to be used to refer to the model
+* `inputFile`: input train or test .tsv file (must be located in the working directory set by procedure `ga.nlp.config.model.workdir()`)
+
+You can see the progress of the training in the neo4j log. It runs until convergence (there's no fixed number of iterations).
+
+To test the model, prepare an independent test file of the same structure as the training file. The test procedure will return to you an overall precision, recall and F1 score. For details, have a look at the neo4j log file. You'll find that the testing outputs your test data plus a third column representing predicted labels. It also prints out detailed statistics per class (you can train multiple NE classes from a single file).
