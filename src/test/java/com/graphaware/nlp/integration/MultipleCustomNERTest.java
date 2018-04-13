@@ -38,15 +38,6 @@ public class MultipleCustomNERTest extends StanfordNLPIntegrationTest {
         // Annotate
         executeInTransaction("MATCH (n:Document) CALL ga.nlp.annotate({text: n.text, id:id(n), pipeline: 'customNER', checkLanguage:false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
 
-        executeInTransaction("MATCH (n:Tag) RETURN [x IN labels(n) | x] AS labels, n.value AS val", (result -> {
-            while (result.hasNext()) {
-                Map<String, Object> record = result.next();
-                List<String> labels = (List<String>) record.get("labels");
-                System.out.println(labels);
-                System.out.println(record.get("val").toString());
-            }
-        }));
-
         TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
         testNLPGraph.assertTagWithValueHasNE("Apollo 1", "MISSION");
         testNLPGraph.assertTagWithValueHasNE("Opel", "CAR_MARQUE");

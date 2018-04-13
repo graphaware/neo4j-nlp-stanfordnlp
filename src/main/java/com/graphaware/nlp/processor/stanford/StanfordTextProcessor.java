@@ -101,20 +101,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = pipelines.get(pipelineSpecification.getName());
-
-        // Add custom NER models
-        if (pipelineSpecification.hasProcessingStep("customNER")) {
-            String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
-            pipeline = new PipelineBuilder(pipelineSpecification.getName())
-                    .tokenize()
-                    .extractNEs(modelPath)
-                    .defaultStopWordAnnotator()
-                    .build();
-            pipeline.getProperties().setProperty("ner.model", modelPath);
-            LOG.info("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
-            System.out.println("Custom NER(s) set to: " + pipeline.getProperties().getProperty("ner.model"));
-        }
-
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
@@ -743,14 +729,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
         if (pipelineSpecification.hasProcessingStep("customNER")) {
-            // @todo load custom ner model here
-        }
-
-        LOG.info(" >>>>>>> Creating pipeline");
-        if (pipelineSpecification.hasProcessingStep("customNER")) {
-            LOG.info(" >>>>>>>   Adding " + pipelineSpecification.getProcessingStepAsString("customNER"));
-            LOG.info(" >>>>>>>   File: " + createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
-            System.out.println("\n >>>>>>>>>>>> Adding customNER to the pipeline: " + createModelFileName("ner", pipelineSpecification.getProcessingStepAsString("customNER")));
+            String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
+            pipelineBuilder.withCustomModels(modelPath);
+            LOG.info("Custom NER models loaded from : " + modelPath);
         }
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();

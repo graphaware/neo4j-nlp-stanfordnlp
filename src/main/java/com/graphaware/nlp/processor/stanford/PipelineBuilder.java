@@ -137,6 +137,11 @@ public class PipelineBuilder {
         return this;
     }
 
+    public PipelineBuilder withCustomModels(String modelPaths) {
+        properties.setProperty("ner.model", modelPaths);
+        return this;
+    }
+
     public StanfordCoreNLP build() {
         properties.setProperty("annotators", annotators.toString());
         //properties.setProperty("ner.model", customNEs.toString());
