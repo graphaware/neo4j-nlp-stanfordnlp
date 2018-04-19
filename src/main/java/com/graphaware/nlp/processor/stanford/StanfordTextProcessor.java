@@ -139,7 +139,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         Arrays.asList(modelIds.split(",")).forEach(id -> {
             modelPaths.add(getModelLocation(id));
         });
-
+        modelPaths.add("edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
         return org.apache.commons.lang3.StringUtils.join(modelPaths, ",");
     }
 
@@ -171,7 +171,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
                     String currentNe = backgroundSymbol;
                     if (pipelineSpecification.hasProcessingStep(STEP_NER, true) || pipelineSpecification.hasProcessingStep("customNER")) {
-                        currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                        String ann = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                        currentNe = StringUtils.getNotNullString(ann);
                     }
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
