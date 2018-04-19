@@ -20,8 +20,6 @@ public class SocialNetworkNERTest extends StanfordNLPIntegrationTest {
 
         String q = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'social-network-train.tsv', trainingParameters: {iter: 10}})";
         executeInTransaction(q, emptyConsumer());
-        String t = "CALL ga.nlp.processor.test({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'nasa-test.tsv', trainingParameters: {iter: 10}})";
-//        executeInTransaction(t, emptyConsumer());
 
         // Create pipeline
         String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
@@ -48,12 +46,6 @@ public class SocialNetworkNERTest extends StanfordNLPIntegrationTest {
         testNLPGraph.assertTagWithValueHasNE("Facebook", "SOCIALNETWORK");
         testNLPGraph.assertTagWithValueHasNE("Snapchat", "SOCIALNETWORK");
         testNLPGraph.assertTagWithValueHasNE("Twitter", "SOCIALNETWORK");
-
-
-//        // Check if some labels are there
-//        executeInTransaction("MATCH (n:NER_Mission) RETURN count(n) AS c", (result -> {
-//            assertTrue((long) result.next().get("c") > 0);
-//        }));
     }
 
     @Test
@@ -71,6 +63,7 @@ public class SocialNetworkNERTest extends StanfordNLPIntegrationTest {
         executeInTransaction(addPipelineQuery, emptyConsumer());
         // Annotate
         executeInTransaction("MATCH (n:Document) CALL ga.nlp.annotate({text: n.text, id:id(n), pipeline: 'customNER', checkLanguage:false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
-
+        TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
+        testNLPGraph.assertTagWithValueHasNE("Bill Gates", "PERSON");
     }
 }
