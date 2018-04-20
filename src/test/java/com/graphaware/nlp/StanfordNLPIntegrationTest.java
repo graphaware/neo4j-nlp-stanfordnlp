@@ -45,4 +45,9 @@ public abstract class StanfordNLPIntegrationTest extends NLPIntegrationTest {
         executeInTransaction("CREATE (n:Document) SET n.text = {p0} WITH n CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", buildSeqParameters(text), emptyConsumer());
     }
 
+    protected void createPipelineWithDependency(String name) {
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name: {p0}, textProcessor: {p1} , processingSteps: {tokenize:true, ner:true, dependency: true}})",
+                buildSeqParameters(name, StanfordTextProcessor.class.getName()), emptyConsumer());
+    }
+
 }
