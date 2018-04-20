@@ -56,7 +56,7 @@ public class PipelineBuilder {
 
     public PipelineBuilder dependencies() {
         checkForExistingAnnotators();
-        annotators.append("parse");
+        annotators.append("depparse");
         return this;
     }
 
@@ -81,7 +81,7 @@ public class PipelineBuilder {
 
     public PipelineBuilder extractCoref() {
         checkForExistingAnnotators();
-        annotators.append("mention, coref");
+        annotators.append("parse, mention, coref");
         properties.setProperty("coref.doClustering", "true");
         properties.setProperty("coref.md.type", "rule");
         properties.setProperty("coref.mode", "statistical");
@@ -144,7 +144,6 @@ public class PipelineBuilder {
 
     public StanfordCoreNLP build() {
         properties.setProperty("annotators", annotators.toString());
-        //properties.setProperty("ner.model", customNEs.toString());
         properties.setProperty("threads", String.valueOf(threadsNumber));
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
         return pipeline;
