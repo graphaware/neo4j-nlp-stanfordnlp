@@ -62,7 +62,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <stanford.nlp.version>3.9.1</stanford.nlp.version>
+        <stanford.nlp.version>3.8.0</stanford.nlp.version>
         <graphaware.version>3.3.3.52</graphaware.version>
         <resttest.version>${graphaware.version}.18</resttest.version>
         <neo4j.version>3.3.3</neo4j.version>
