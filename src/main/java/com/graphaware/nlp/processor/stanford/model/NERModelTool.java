@@ -168,9 +168,9 @@ public class NERModelTool {
             path = this.DEFAULT_PROPERTIES_FILE;
         LOG.info("Properties file: " + path);
 
+        Properties prop = new Properties();
         InputStream is = openFile(path);
 
-        Properties prop = new Properties();
         try {
             prop.load(is);
         } catch (IOException ex) {
