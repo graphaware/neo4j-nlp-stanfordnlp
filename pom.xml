@@ -68,7 +68,7 @@
         <neo4j.version>3.3.3</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.3.3.52.7-SNAPSHOT</nlp.version>
+        <nlp.version>3.3.3.52.7</nlp.version>
     </properties>
 
     <dependencies>
