@@ -130,4 +130,13 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
             }
         }));
     }
+
+    @Test
+    public void testAnnotationWithRelationStep() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name: 'relationsXYZ', textProcessor: {p0}, processingSteps:{tokenize:true, ner:true, dependency: true, coref:true, phrase: true, relations:true}})", buildSeqParameters(StanfordTextProcessor.class.getName()), emptyConsumer());
+        String text = "Barack Obama is an american politician. He was Born in Hawaï.";
+        executeInTransaction("CALL ga.nlp.annotate({text: {p0}, pipeline: 'relationsXYZ', id: 'rel-test', checkLanguage: false}) YIELD result RETURN result", buildSeqParameters(text), emptyConsumer());
+//        executeInTransaction;
+    }
 }
