@@ -108,9 +108,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             int sentenceNumber = sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
 
-            if (pipelineSpecification.hasProcessingStep(STEP_NER, true) || pipelineSpecification.hasProcessingStep("customNER")) {
-                extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER(), pipelineSpecification);
-            }
+            extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER(), pipelineSpecification);
 
             if (pipelineSpecification.hasProcessingStep(STEP_SENTIMENT, false)) {
                 extractSentiment(sentence, newSentence);
