@@ -79,12 +79,12 @@ public class StopwordAnnotator implements Annotator, CoreAnnotation<Pair<Boolean
 
     @Override
     public void annotate(Annotation annotation) {
-        checkStopwords();
+        //checkStopwords();
         if (stopwords != null && stopwords.size() > 0 && annotation.containsKey(TokensAnnotation.class)) {
             List<CoreLabel> tokens = annotation.get(TokensAnnotation.class);
             for (CoreLabel token : tokens) {
                 boolean isWordStopword = stopwords.contains(token.word().toLowerCase());
-                boolean isLemmaStopword = checkLemma ? stopwords.contains(token.lemma().toLowerCase()) : false;
+                boolean isLemmaStopword = checkLemma && token.lemma() != null ? stopwords.contains(token.lemma().toLowerCase()) : false;
                 Pair<Boolean, Boolean> pair = Pair.makePair(isWordStopword, isLemmaStopword);
                 token.set(StopwordAnnotator.class, pair);
             }

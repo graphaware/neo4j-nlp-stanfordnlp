@@ -23,12 +23,16 @@ public class PipelineBuilder {
     public PipelineBuilder tokenize() {
         checkForExistingAnnotators();
         annotators.append("tokenize, ssplit, pos, lemma");
+        properties.setProperty("pos.maxlen", "100");
+        properties.setProperty("parse.maxlen", "100");
         return this;
     }
 
     public PipelineBuilder extractNEs() {
         checkForExistingAnnotators();
         annotators.append("ner");
+        properties.setProperty("ner.useSUTime", "false");
+        properties.setProperty("ner.applyNumericClassifiers", "false");
         return this;
     }
 
@@ -36,7 +40,6 @@ public class PipelineBuilder {
         checkForExistingAnnotators();
         annotators.append("ner");
         properties.setProperty("ner.model", modelPath);
-
         return this;
     }
     
@@ -81,7 +84,7 @@ public class PipelineBuilder {
 
     public PipelineBuilder extractCoref() {
         checkForExistingAnnotators();
-        annotators.append("parse, mention, coref");
+        annotators.append("parse, coref");
         properties.setProperty("coref.doClustering", "true");
         properties.setProperty("coref.md.type", "rule");
         properties.setProperty("coref.mode", "statistical");

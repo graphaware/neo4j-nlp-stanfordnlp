@@ -64,7 +64,7 @@ public class TextProcessorTest {
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
         test.assertTagsCountInSentence(15, 0);
-        test.assertTagsCountInSentence(11, 1);
+        test.assertTagsCountInSentence(10, 1);
         test.assertTagsCountInSentence(24, 2);
         test.assertTagsCountInSentence(8, 3);
 

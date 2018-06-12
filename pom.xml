@@ -62,13 +62,13 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <stanford.nlp.version>3.8.0</stanford.nlp.version>
+        <stanford.nlp.version>3.9.1</stanford.nlp.version>
         <graphaware.version>3.4.0.52</graphaware.version>
         <resttest.version>${graphaware.version}.18</resttest.version>
         <neo4j.version>3.4.0</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.4.0.52.8</nlp.version>
+        <nlp.version>3.4.0.52.9-SNAPSHOT</nlp.version>
     </properties>
 
     <dependencies>

@@ -101,7 +101,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         AnnotatedText result = new AnnotatedText();
         Annotation document = new Annotation(text);
         StanfordCoreNLP pipeline = pipelines.get(pipelineSpecification.getName());
+        long startAnnotation = -System.currentTimeMillis();
         pipeline.annotate(document);
+        LOG.info("Time for pipeline annotation: " + (System.currentTimeMillis() + startAnnotation) + ". Text lenght: " + text.length());
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.forEach((sentence) -> {
@@ -163,7 +165,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
         tokens.stream()
-                .filter((token) -> (token != null))
+                .filter((token) -> (token != null && token.get(CoreAnnotations.LemmaAnnotation.class) != null))
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
@@ -407,7 +409,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     Tag tag = new Tag(text, lang);
                     tag.setPos(Arrays.asList());
                     tag.setNe(Arrays.asList());
-                    LOG.info("POS: " + tag.getPosAsList() + " ne: " + tag.getNeAsList() + " lemma: " + tag.getLemma());
+                    //LOG.info("POS: " + tag.getPosAsList() + " ne: " + tag.getNeAsList() + " lemma: " + tag.getLemma());
                     return tag;
                 }
             }
@@ -441,7 +443,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         Tag tag = new Tag(lemma, lang);
         tag.setPos(Arrays.asList(pos));
         tag.setNe(Arrays.asList(ne));
-        LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
+        //LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
         return tag;
     }
 
