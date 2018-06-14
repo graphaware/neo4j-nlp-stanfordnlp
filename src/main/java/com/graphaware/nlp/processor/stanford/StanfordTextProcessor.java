@@ -124,12 +124,12 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                 extractDependencies(sentence, newSentence);
             }
 
-            if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS, false)) {
-                extractRelationship(result, sentences, document);
-            }
             result.addSentence(newSentence);
-
         });
+
+        if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS, false)) {
+            extractRelationship(result, sentences, document);
+        }
 
         return result;
     }
