@@ -5,6 +5,7 @@ import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import org.junit.Before;
 import org.junit.Test;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
 import java.util.Arrays;
@@ -136,7 +137,10 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
         clearDb();
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name: 'relationsXYZ', textProcessor: {p0}, processingSteps:{tokenize:true, ner:true, dependency: true, coref:true, phrase: true, relations:true}})", buildSeqParameters(StanfordTextProcessor.class.getName()), emptyConsumer());
         String text = "Barack Obama is an american politician. He was Born in Hawaï.";
-        executeInTransaction("CALL ga.nlp.annotate({text: {p0}, pipeline: 'relationsXYZ', id: 'rel-test', checkLanguage: false}) YIELD result RETURN result", buildSeqParameters(text), emptyConsumer());
-//        executeInTransaction;
+        executeInTransaction("CALL ga.nlp.annotate({text: {p0}, checkLanguage: false, pipeline: 'relationsXYZ', id: 'rel-test', checkLanguage: false}) YIELD result RETURN result", buildSeqParameters(text), emptyConsumer());
+        executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {
+            assertTrue(result.hasNext());
+            System.out.println(((Node) result.next().get("n")).getAllProperties());
+        }));
     }
 }
