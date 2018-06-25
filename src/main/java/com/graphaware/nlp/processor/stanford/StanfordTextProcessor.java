@@ -175,7 +175,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                         currentNe = StringUtils.getNotNullString(ann);
                     }
 
-                    if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class))) {
+                    if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class)) && currentNe.equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             if (!excludedNER.contains(currToken.getNe())) {
@@ -197,13 +197,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                                     token.originalText(),
                                     newSentence.addTag(tag),
                                     Arrays.asList(tokenId));
-                        } /* else { //>>>>>>>> This shouldn't be here, right? Because tokenId is NOT NamedEntity; moreover, getTag() returns null only if it didn't pass stopwords list.
-                            if (!currToken.getTokenIds().contains(tokenId)) {
-                                currToken.getTokenIds().add(tokenId);   //>>>>>>>> This is wrong: updateToken() should be used!
-                            } else {
-                                // debug
-                            }
-                        }*/
+                        }
                     } else if (currentNe.equals(backgroundSymbol)
                             && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
