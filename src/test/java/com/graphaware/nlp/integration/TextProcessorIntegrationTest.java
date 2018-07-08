@@ -77,7 +77,7 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
         tester.assertNodesCount("NER_Person", 0);
         tester.assertNodesCount("NER_Location", 0);
-        tester.assertNodesCount("NER_O", 0);
+        tester.assertNodesCount("NER_O", 10);
     }
 
     @Test

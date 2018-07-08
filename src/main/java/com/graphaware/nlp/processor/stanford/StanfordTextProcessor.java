@@ -166,6 +166,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
+        currToken.setPos("");
         tokens.stream()
                 .filter((token) -> (token != null && token.get(CoreAnnotations.LemmaAnnotation.class) != null))
                 .map((token) -> {
@@ -176,12 +177,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                         String ann = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
                         currentNe = StringUtils.getNotNullString(ann);
                     }
+                    String currentPOS = StringUtils.getNotNullString(token.get(CoreAnnotations.PartOfSpeechAnnotation.class));
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class)) && currentNe.equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             if (!excludedNER.contains(currToken.getNe())) {
                                 newTag.setNe(Arrays.asList(currToken.getNe()));
+                                newTag.setPos(Arrays.asList(currToken.getPos()));
                             }
                             newSentence.addTagOccurrence(currToken.getBeginPosition(),
                                     currToken.getEndPosition(),
@@ -206,6 +209,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                             Tag newTag = new Tag(currToken.getToken(), lang);
                             if (!excludedNER.contains(currToken.getNe())) {
                                 newTag.setNe(Arrays.asList(currToken.getNe()));
+                                newTag.setPos(Arrays.asList(currToken.getPos()));
                             }
                             newSentence.addTagOccurrence(currToken.getBeginPosition(),
                                     currToken.getEndPosition(),
@@ -228,6 +232,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                             Tag tag = new Tag(currToken.getToken(), lang);
                             if (!excludedNER.contains(currToken.getNe())) {
                                 tag.setNe(Arrays.asList(currToken.getNe()));
+                                tag.setPos(Arrays.asList(currToken.getPos()));
                             }
                             newSentence.addTagOccurrence(currToken.getBeginPosition(),
                                     currToken.getEndPosition(),
@@ -260,13 +265,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                         currToken.setEndPosition(token.endPosition());
                     }
 
-                    return currentNe;
+                    return new Pair<>(currentNe, currentPOS);
                 })
-                .forEach((currentNe) -> {
-            if (!excludedNER.contains(currentNe)) {
-                currToken.setNe(currentNe);
-            }
-        });
+                .forEach((currentNePOS) -> {
+                    if (!excludedNER.contains(currentNePOS.first)) {
+                        currToken.setNe(currentNePOS.first);
+                        currToken.setPos(currentNePOS.second);
+                    }
+                });
 
         if (currToken.getToken().length() > 0) {
             Tag tag = new Tag(currToken.getToken(), lang);
@@ -342,7 +348,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                 List<CoreLabel> representativeTokens = sentences.get(representativeSenteceNumber).get(CoreAnnotations.TokensAnnotation.class);
                 System.out.println(representativeTokens.size() + " representative tokens");
                 System.out.println("representative end index is : " + representative.endIndex);
-                if (representative.endIndex - 1 > representativeTokens.size() ) {
+                if (representative.endIndex - 1 > representativeTokens.size()) {
                     continue;
                 }
                 int beginPosition = representativeTokens.get(representative.startIndex - 1).beginPosition();
@@ -544,6 +550,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     class TokenHolder {
 
         private String ne;
+        private String pos;
         private StringBuilder sb;
         private StringBuilder sbOriginalValue;
         private int beginPosition;
@@ -561,7 +568,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         public String getToken() {
             return sb.toString();
         }
-        
+
         public String getOriginalValue() {
             return sbOriginalValue.toString();
         }
@@ -608,6 +615,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             beginPosition = -1;
             endPosition = -1;
             tokenIds.clear();
+        }
+
+        public String getPos() {
+            return pos;
+        }
+
+        public void setPos(String pos) {
+            this.pos = pos;
         }
     }
 
@@ -737,10 +752,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             String customStopWordList = pipelineSpecification.getStopWords();
             if (customStopWordList.startsWith("+")) {
                 stopWordList += "," + customStopWordList.replace("+,", "").replace("+", "");
-            } else if(pipelineSpecification.getWhitelist() != null) {
+            } else if (pipelineSpecification.getWhitelist() != null) {
                 stopWordList = "";
-            }
-            else {
+            } else {
                 stopWordList = customStopWordList;
             }
         }
