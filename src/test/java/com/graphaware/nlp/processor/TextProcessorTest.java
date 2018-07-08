@@ -63,12 +63,12 @@ public class TextProcessorTest {
 
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
-        test.assertTagsCountInSentence(15, 0);
+        test.assertTagsCountInSentence(17, 0);
         test.assertTagsCountInSentence(10, 1);
-        test.assertTagsCountInSentence(24, 2);
+        test.assertTagsCountInSentence(25, 2);
         test.assertTagsCountInSentence(8, 3);
 
-        test.assertTag(newTag("Pakistan", Collections.singletonList("LOCATION"), Collections.emptyList()));
+        test.assertTag(newTag("Pakistan", Collections.singletonList("COUNTRY"), Collections.emptyList()));
         test.assertTag(newTag("show", Collections.emptyList(), Collections.singletonList("VBZ")));
     }
     
@@ -182,11 +182,11 @@ public class TextProcessorTest {
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);
-        assertEquals(15, sentence1.getTags().size());
+        assertEquals(17, sentence1.getTags().size());
         
         assertNull(sentence1.getTagOccurrence(0));
-        assertEquals("8 May 2013", sentence1.getTagOccurrence(3).getLemma());
-        assertEquals("one week", sentence1.getTagOccurrence(15).getLemma());
+        assertEquals("8", sentence1.getTagOccurrence(3).getLemma());
+        assertEquals("one", sentence1.getTagOccurrence(15).getLemma());
         assertEquals("before", sentence1.getTagOccurrence(24).getLemma());
         assertEquals("third", sentence1.getTagOccurrence(59).getLemma());
         assertEquals("sentiment", sentence1.getTagOccurrence(103).getLemma());
