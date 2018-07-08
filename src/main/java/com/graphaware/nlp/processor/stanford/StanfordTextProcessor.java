@@ -763,10 +763,15 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         Long threadNumber = pipelineSpecification.getThreadNumber();
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
-        if (pipelineSpecification.hasProcessingStep("customNER")) {
-            String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
-            pipelineBuilder.withCustomModels(modelPath);
-            LOG.info("Custom NER models loaded from : " + modelPath);
+        try {
+            if (pipelineSpecification.hasProcessingStep("customNER")) {
+                String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
+                pipelineBuilder.withCustomModels(modelPath);
+                LOG.info("Custom NER models loaded from : " + modelPath);
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            return;
         }
 
         StanfordCoreNLP pipeline = pipelineBuilder.build();
