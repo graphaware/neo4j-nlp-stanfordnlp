@@ -166,6 +166,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         currToken.setNe(backgroundSymbol);
         tokens.stream()
                 .filter((token) -> (token != null && token.get(CoreAnnotations.LemmaAnnotation.class) != null))
+                .filter((token) -> pipelineSpecification.getWhitelist() != null && Arrays.asList(pipelineSpecification.getWhitelist().split(",")).contains(token))
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
@@ -706,7 +707,10 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             String customStopWordList = pipelineSpecification.getStopWords();
             if (customStopWordList.startsWith("+")) {
                 stopWordList += "," + customStopWordList.replace("+,", "").replace("+", "");
-            } else {
+            } else if(pipelineSpecification.getWhitelist() != null) {
+                stopWordList = "";
+            }
+            else {
                 stopWordList = customStopWordList;
             }
         }

@@ -143,4 +143,16 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
             System.out.println(((Node) result.next().get("n")).getAllProperties());
         }));
     }
+
+    @Test
+    public void testAnnotationWithWhitelist() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name: 'whitelist', whitelist:'i,be,john,hello,ibm', textProcessor: {p0}, processingSteps:{tokenize:true, ner:true}})", buildSeqParameters(StanfordTextProcessor.class.getName()), emptyConsumer());
+        String text = "Hello, my name is John and I work at IBM.";
+        executeInTransaction("CALL ga.nlp.annotate({text: {p0}, checkLanguage: false, pipeline: 'whitelist', id: 'rel-test', checkLanguage: false}) YIELD result RETURN result", buildSeqParameters(text), emptyConsumer());
+        executeInTransaction("MATCH (n:Tag) RETURN n", (result -> {
+            assertTrue(result.hasNext());
+            System.out.println(((Node) result.next().get("n")).getAllProperties());
+        }));
+    }
 }
