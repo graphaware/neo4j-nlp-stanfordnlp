@@ -44,6 +44,7 @@ import org.neo4j.logging.Log;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
@@ -124,6 +125,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                 extractDependencies(sentence, newSentence);
             }
 
+            filterWhitelist(newSentence, pipelineSpecification);
             result.addSentence(newSentence);
         });
 
@@ -166,7 +168,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         currToken.setNe(backgroundSymbol);
         tokens.stream()
                 .filter((token) -> (token != null && token.get(CoreAnnotations.LemmaAnnotation.class) != null))
-                .filter((token) -> pipelineSpecification.getWhitelist() != null && Arrays.asList(pipelineSpecification.getWhitelist().split(",")).contains(token))
                 .map((token) -> {
                     //
                     String tokenId = newSentence.getId() + token.beginPosition() + token.endPosition() + token.lemma();
@@ -266,7 +267,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     }
 
                     return currentNe;
-                }).forEach((currentNe) -> {
+                })
+                .forEach((currentNe) -> {
             if (!excludedNER.contains(currentNe)) {
                 currToken.setNe(currentNe);
             }
@@ -280,6 +282,40 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     currToken.getOriginalValue(),
                     newSentence.addTag(tag),
                     currToken.getTokenIds());
+        }
+    }
+
+    protected void filterWhitelist(Sentence sentence, PipelineSpecification pipelineSpecification) {
+        if (pipelineSpecification.getWhitelist() == null || pipelineSpecification.getWhitelist().split(",").length == 0) {
+            return;
+        }
+
+        List<String> whitelist = Arrays.stream(pipelineSpecification.getWhitelist().split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
+
+        List<Integer> positionsToDelete = new ArrayList<>();
+        List<String> tagsToDelete = new ArrayList<>();
+        sentence.getTagOccurrences().keySet().forEach(i -> {
+            TagOccurrence occurrence = sentence.getTagOccurrences().get(i).get(0);
+            if (whitelist.contains(occurrence.getValue().toLowerCase()) || whitelist.contains(occurrence.getElement().getLemma().toLowerCase())) {
+                // ok
+            } else {
+                positionsToDelete.add(i);
+                tagsToDelete.add(occurrence.getElement().getLemma());
+            }
+        });
+        positionsToDelete.forEach(d -> {
+            sentence.getTagOccurrences().remove(d);
+        });
+
+        Iterator<Tag> iterator = sentence.getTags().iterator();
+        while (iterator.hasNext()) {
+            Tag tag = iterator.next();
+            if (tagsToDelete.contains(tag.getLemma())) {
+                iterator.remove();
+            }
         }
     }
 
