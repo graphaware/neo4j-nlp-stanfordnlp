@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static junit.framework.TestCase.assertTrue;
+
 public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
 
     @Test
@@ -38,14 +40,18 @@ public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
                 System.out.println(record.get("val").toString());
             }
         }));
+        // Check if some labels are there
+        executeInTransaction("MATCH (n:NER_Mission) RETURN count(n) AS c", (result -> {
+            assertTrue((long) result.next().get("c") > 0);
+        }));
         TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
         testNLPGraph.assertTagWithValueHasNE("Apollo 1", "MISSION");
 
 
-//        // Check if some labels are there
-//        executeInTransaction("MATCH (n:NER_Mission) RETURN count(n) AS c", (result -> {
-//            assertTrue((long) result.next().get("c") > 0);
-//        }));
+        // Check if some labels are there
+        executeInTransaction("MATCH (n:NER_Mission) RETURN count(n) AS c", (result -> {
+            assertTrue((long) result.next().get("c") > 0);
+        }));
     }
 
     private void importDataset() {

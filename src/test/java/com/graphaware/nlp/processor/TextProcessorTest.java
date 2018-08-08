@@ -21,6 +21,8 @@ import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestAnnotatedText;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.junit.BeforeClass;
@@ -64,11 +66,11 @@ public class TextProcessorTest {
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
         test.assertTagsCountInSentence(17, 0);
-        test.assertTagsCountInSentence(10, 1);
+        test.assertTagsCountInSentence(11, 1);
         test.assertTagsCountInSentence(25, 2);
         test.assertTagsCountInSentence(8, 3);
 
-        test.assertTag(newTag("Pakistan", Collections.singletonList("COUNTRY"), Collections.emptyList()));
+        test.assertTag(newTag("Pakistan", Collections.singletonList("LOCATION"), Collections.emptyList()));
         test.assertTag(newTag("show", Collections.emptyList(), Collections.singletonList("VBZ")));
     }
     
@@ -338,4 +340,21 @@ public class TextProcessorTest {
             assertFalse(blacklist2.contains(tag.getLemma()));
         });
     }
+//
+//    @Test
+//    public void testAnnotationOnSmallText() throws Exception {
+//        String text = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("textFile6k.txt").getPath())));
+//        PipelineSpecification specification = new PipelineSpecification("perf6k", StanfordTextProcessor.class.getName());
+//        specification.addProcessingStep("tokenize");
+//        specification.addProcessingStep("ner");
+//        specification.addProcessingStep("dependency");
+////        specification.addProcessingStep("fineGrainedNER");
+//        textProcessor.createPipeline(specification);
+//
+//        for (int i = 0; i < 20; ++i) {
+//            Long start = System.currentTimeMillis();
+//            AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+//            System.out.println(System.currentTimeMillis() - start);
+//        }
+//    }
 }

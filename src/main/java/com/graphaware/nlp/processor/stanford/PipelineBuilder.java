@@ -23,16 +23,17 @@ public class PipelineBuilder {
     public PipelineBuilder tokenize() {
         checkForExistingAnnotators();
         annotators.append("tokenize, ssplit, pos, lemma");
-        properties.setProperty("pos.maxlen", "100");
-        properties.setProperty("parse.maxlen", "100");
+//        properties.setProperty("pos.maxlen", "100");
+//        properties.setProperty("parse.maxlen", "100");
         return this;
     }
 
-    public PipelineBuilder extractNEs() {
+    public PipelineBuilder extractNEs(boolean fineGrained) {
         checkForExistingAnnotators();
         annotators.append("ner");
         properties.setProperty("ner.useSUTime", "false");
         properties.setProperty("ner.applyNumericClassifiers", "false");
+        properties.setProperty("ner.applyFineGrained", String.valueOf(fineGrained));
         return this;
     }
 
