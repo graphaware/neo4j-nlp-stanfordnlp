@@ -61,6 +61,10 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
     protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
     protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
+
+    public static final String PROCESSING_STEP_FINE_GRAINED_NER = "fineGrainedNER";
+    private static final boolean DEFAULT_FINE_GRAINED_NER = false;
+
     protected boolean initiated = false;
 
     @Override
@@ -728,7 +732,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         }
 
         if (pipelineSpecification.hasProcessingStep(STEP_NER, true)) {
-            pipelineBuilder.extractNEs();
+            boolean fineGrained = pipelineSpecification.hasProcessingStep(PROCESSING_STEP_FINE_GRAINED_NER, DEFAULT_FINE_GRAINED_NER);
+            pipelineBuilder.extractNEs(fineGrained);
         }
 
         if (pipelineSpecification.hasProcessingStep(STEP_CLEAN_XML)) {

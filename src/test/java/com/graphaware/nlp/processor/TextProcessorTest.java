@@ -21,6 +21,8 @@ import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestAnnotatedText;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.junit.BeforeClass;
@@ -338,4 +340,21 @@ public class TextProcessorTest {
             assertFalse(blacklist2.contains(tag.getLemma()));
         });
     }
+//
+//    @Test
+//    public void testAnnotationOnSmallText() throws Exception {
+//        String text = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("textFile6k.txt").getPath())));
+//        PipelineSpecification specification = new PipelineSpecification("perf6k", StanfordTextProcessor.class.getName());
+//        specification.addProcessingStep("tokenize");
+//        specification.addProcessingStep("ner");
+//        specification.addProcessingStep("dependency");
+////        specification.addProcessingStep("fineGrainedNER");
+//        textProcessor.createPipeline(specification);
+//
+//        for (int i = 0; i < 20; ++i) {
+//            Long start = System.currentTimeMillis();
+//            AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+//            System.out.println(System.currentTimeMillis() - start);
+//        }
+//    }
 }
