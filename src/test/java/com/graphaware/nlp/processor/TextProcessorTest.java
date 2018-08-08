@@ -66,11 +66,11 @@ public class TextProcessorTest {
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
         test.assertTagsCountInSentence(17, 0);
-        test.assertTagsCountInSentence(10, 1);
+        test.assertTagsCountInSentence(11, 1);
         test.assertTagsCountInSentence(25, 2);
         test.assertTagsCountInSentence(8, 3);
 
-        test.assertTag(newTag("Pakistan", Collections.singletonList("COUNTRY"), Collections.emptyList()));
+        test.assertTag(newTag("Pakistan", Collections.singletonList("LOCATION"), Collections.emptyList()));
         test.assertTag(newTag("show", Collections.emptyList(), Collections.singletonList("VBZ")));
     }
     
