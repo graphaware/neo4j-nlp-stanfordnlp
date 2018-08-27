@@ -29,6 +29,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -104,11 +105,12 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
         checkPipelineExistOrCreate(pipelineSpecification);
         AnnotatedText result = new AnnotatedText();
-        Annotation document = new Annotation(text);
+        CoreDocument coreDocument = new CoreDocument(text);
         StanfordCoreNLP pipeline = pipelines.get(pipelineSpecification.getName());
         long startAnnotation = -System.currentTimeMillis();
-        pipeline.annotate(document);
-        LOG.info("Time for pipeline annotation: " + (System.currentTimeMillis() + startAnnotation) + ". Text lenght: " + text.length());
+        pipeline.annotate(coreDocument);
+        Annotation document = coreDocument.annotation();
+        LOG.info("Time for pipeline annotation: " + (System.currentTimeMillis() + startAnnotation) + ". Text length: " + text.length());
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.forEach((sentence) -> {
@@ -137,7 +139,11 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             extractRelationship(result, sentences, document);
         }
 
-        return result;
+        return extendAnnotation(text, lang, pipelineSpecification, result, coreDocument, document, sentences);
+    }
+
+    protected AnnotatedText extendAnnotation(String text, String lang, PipelineSpecification pipelineSpecification, AnnotatedText annotatedText, CoreDocument coreDocument, Annotation document, List<CoreMap> sentences) {
+        return annotatedText;
     }
 
     protected String getCustomModelsPaths(String modelIds) {
@@ -793,8 +799,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             return;
         }
 
+        extendPipeline(pipelineSpecification, pipelineBuilder);
+
         StanfordCoreNLP pipeline = pipelineBuilder.build();
         pipelines.put(name, pipeline);
+    }
+
+    protected void extendPipeline(PipelineSpecification pipelineSpecification, PipelineBuilder builder) {
+        //
     }
 
     @Override
