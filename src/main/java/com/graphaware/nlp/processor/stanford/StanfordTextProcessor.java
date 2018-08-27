@@ -56,6 +56,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     private static final Log LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
     protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
     private static final String STEP_RELATIONS = "relations";
+    protected static final String DEFAULT_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
@@ -95,7 +96,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         return pipeline;
     }
 
-    private void checkPipelineExistOrCreate(PipelineSpecification pipelineSpecification) {
+    protected void checkPipelineExistOrCreate(PipelineSpecification pipelineSpecification) {
         if (!pipelines.containsKey(pipelineSpecification.getName())) {
             createPipeline(pipelineSpecification);
         }
@@ -172,7 +173,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     protected void extractTokens(String lang, CoreMap sentence, final Sentence newSentence, List<String> excludedNER, PipelineSpecification pipelineSpecification) {
-
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
         TokenHolder currToken = new TokenHolder();
         currToken.setNe(backgroundSymbol);
