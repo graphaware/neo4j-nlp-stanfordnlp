@@ -1,3 +1,8 @@
+3.4.6.52.13-SNAPSHOT
+
+- Updated to latest base nlp
+- Small extension points for Enterprise Stanford Processor
+
 3.4.0.52.12
 
 - Fixed an issue with NEs that contain a symbol not passing the checkLemma
