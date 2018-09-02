@@ -17,13 +17,13 @@ public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
         String text = "Apollo 1, initially designated AS-204, was the first manned mission of the United States Apollo program, which had as its ultimate goal a manned lunar landing.";
 
-        String q = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'nasa-train.tsv', trainingParameters: {iter: 10}})";
+        String q = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-nasa-ner\", alg: \"ner\", inputFile: 'nasa-train.tsv', trainingParameters: {iter: 10}})";
         executeInTransaction(q, emptyConsumer());
-        String t = "CALL ga.nlp.processor.test({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'nasa-test.tsv', trainingParameters: {iter: 10}})";
+        String t = "CALL ga.nlp.processor.test({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-nasa-ner\", alg: \"ner\", inputFile: 'nasa-test.tsv', trainingParameters: {iter: 10}})";
         executeInTransaction(t, emptyConsumer());
 
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-nasa-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
 
         // Import some text

@@ -191,7 +191,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
                     if (!checkLemmaIsValid(token.get(CoreAnnotations.LemmaAnnotation.class)) && currentNe.equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
-                            Tag newTag = new Tag(currToken.getToken(), lang);
+                            Tag newTag = new Tag(currToken.getToken(), lang, currToken.getOriginalValue());
                             if (!excludedNER.contains(currToken.getNe())) {
                                 newTag.setNe(Arrays.asList(currToken.getNe()));
                                 newTag.setPos(Arrays.asList(currToken.getPos()));
@@ -216,7 +216,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     } else if (currentNe.equals(backgroundSymbol)
                             && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
-                            Tag newTag = new Tag(currToken.getToken(), lang);
+                            Tag newTag = new Tag(currToken.getToken(), lang, currToken.getOriginalValue());
                             if (!excludedNER.contains(currToken.getNe())) {
                                 newTag.setNe(Arrays.asList(currToken.getNe()));
                                 newTag.setPos(Arrays.asList(currToken.getPos()));
@@ -239,7 +239,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     } else if (!currentNe.equals(currToken.getNe())
                             && !currToken.getNe().equals(backgroundSymbol)) {
                         if (currToken.getToken().length() > 0) {
-                            Tag tag = new Tag(currToken.getToken(), lang);
+                            Tag tag = new Tag(currToken.getToken(), lang, currToken.getOriginalValue());
                             if (!excludedNER.contains(currToken.getNe())) {
                                 tag.setNe(Arrays.asList(currToken.getNe()));
                                 tag.setPos(Arrays.asList(currToken.getPos()));
@@ -285,7 +285,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                 });
 
         if (currToken.getToken().length() > 0) {
-            Tag tag = new Tag(currToken.getToken(), lang);
+            Tag tag = new Tag(currToken.getToken(), lang, currToken.getOriginalValue());
             tag.setNe(Arrays.asList(currToken.getNe()));
             newSentence.addTagOccurrence(currToken.getBeginPosition(),
                     currToken.getEndPosition(),
@@ -308,7 +308,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         List<Integer> positionsToDelete = new ArrayList<>();
         List<String> tagsToDelete = new ArrayList<>();
         sentence.getTagOccurrences().keySet().forEach(i -> {
-            TagOccurrence occurrence = sentence.getTagOccurrences().get(i).get(0);
+            TagOccurrence occurrence = (TagOccurrence) sentence.getTagOccurrences().get(i).get(0);
             if (whitelist.contains(occurrence.getValue().toLowerCase()) || whitelist.contains(occurrence.getElement().getLemma().toLowerCase())) {
                 // ok
             } else {
@@ -320,7 +320,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             sentence.getTagOccurrences().remove(d);
         });
 
-        Iterator<Tag> iterator = sentence.getTags().iterator();
+        Iterator<Tag> iterator = sentence.getTags().values().iterator();
         while (iterator.hasNext()) {
             Tag tag = iterator.next();
             if (tagsToDelete.contains(tag.getLemma())) {
@@ -456,7 +456,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                     Tag tag = new Tag(text, lang);
                     tag.setPos(Arrays.asList());
                     tag.setNe(Arrays.asList());
-                    //LOG.info("POS: " + tag.getPosAsList() + " ne: " + tag.getNeAsList() + " lemma: " + tag.getLemma());
+                    //LOG.info("POS: " + tag.getPos() + " ne: " + tag.getNe() + " lemma: " + tag.getLemma());
                     return tag;
                 }
             }

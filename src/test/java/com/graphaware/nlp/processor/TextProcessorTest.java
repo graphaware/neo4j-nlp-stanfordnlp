@@ -21,14 +21,11 @@ import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.TestAnnotatedText;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static com.graphaware.nlp.processor.stanford.StanfordTextProcessor.TOKENIZER;
 import static org.junit.Assert.*;
 import static com.graphaware.nlp.util.TagUtils.newTag;
 
@@ -294,7 +291,7 @@ public class TextProcessorTest {
         for (Sentence sentence : annotatedText.getSentences()) {
             for (List<TagOccurrence> olist : sentence.getTagOccurrences().values()) {
                 for (TagOccurrence occurrence : olist ) {
-                    if (occurrence.getElement().getNeAsList().contains("LOCATION")) {
+                    if (occurrence.getElement().getNe().contains("LOCATION")) {
                         numberOfLocationEntities++;
                     }
                 }
