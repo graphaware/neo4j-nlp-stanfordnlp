@@ -487,7 +487,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             lemma = token.get(CoreAnnotations.OriginalTextAnnotation.class);
         }
 
-        Tag tag = new Tag(lemma, lang);
+        Tag tag = new Tag(lemma, lang, token.originalText());
         tag.setPos(Arrays.asList(pos));
         tag.setNe(Arrays.asList(ne));
         //LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
