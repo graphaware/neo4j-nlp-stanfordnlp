@@ -157,4 +157,13 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
         nlpGraph.assertTagWithValueDoesNotExist("work");
         nlpGraph.assertTagOccurrenceWithValueDoesNotExist("worked");
     }
+
+    @Test
+    public void testAnnotationWithVersionNumbers() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text:'My machine run MacOS 10.13.5, when I upgraded Atom 1.28, restart atom get error.',id:'test',pipeline:'tokenizer',checkLanguage:false})", emptyConsumer());
+        executeInTransaction("MATCH (n:Tag {value:'10.13.5'}) RETURN n", (result -> {
+            assertTrue(result.hasNext());
+        }));
+    }
 }

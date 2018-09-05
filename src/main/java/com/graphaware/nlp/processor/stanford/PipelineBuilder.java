@@ -3,10 +3,7 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class PipelineBuilder {
 
@@ -111,11 +108,9 @@ public class PipelineBuilder {
         checkForExistingAnnotators();
         String stopWordList;
         if (annotators.indexOf("stopword") >= 0) {
-//            String alreadyexistingStopWordList = properties.getProperty(StopwordAnnotator.STOPWORDS_LIST);
-//            stopWordList = alreadyexistingStopWordList + "," + customStopWordList;
             throw new RuntimeException("A standard stopword annotator already exist!");
         } else {
-            String annoName = "stopword_" + name;
+            String annoName = name + "_" + UUID.randomUUID().toString();
             annotators.append(annoName);
             properties.setProperty("customAnnotatorClass." + annoName, StopwordAnnotator.class.getName());
             if (customStopWordList.startsWith("+")) {
@@ -126,6 +121,7 @@ public class PipelineBuilder {
         }
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
         properties.setProperty(StopwordAnnotator.CHECK_LEMMA, Boolean.toString(checkLemma));
+        
         return this;
     }
 
