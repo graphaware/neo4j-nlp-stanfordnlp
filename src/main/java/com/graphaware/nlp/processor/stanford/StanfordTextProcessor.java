@@ -498,8 +498,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     public boolean checkLemmaIsValid(String value) {
         Matcher match = patternCheck.matcher(value);
 
-        //boolean found = patternCheck.matcher(value).find();
-
         return match.find();
     }
 
@@ -729,7 +727,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         if (pipelines.containsKey(pipelineSpecification.getName())) {
             throw new RuntimeException("Pipeline " + pipelineSpecification.getName() + " already exist for processor " + StanfordTextProcessor.class.getName());
         }
-        //@todo create constants for processing steps
+
         String name = pipelineSpecification.getName();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
 
@@ -814,16 +812,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         if (pipelines.containsKey(name)) {
             pipelines.remove(name);
         }
-    }
-
-    protected Map<String, Object> buildSpecifications(List<String> actives) {
-        List<String> all = Arrays.asList("tokenize", "ner", "cleanxml", "truecase", "dependency", "relations", "checkLemmaIsStopWord", "coref", "sentiment", "phrase", "customNER");
-        Map<String, Object> specs = new HashMap<>();
-        all.forEach(s -> {
-            specs.put(s, actives.contains(s));
-        });
-
-        return specs;
     }
 
     @Override
