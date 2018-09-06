@@ -111,7 +111,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         long startAnnotation = -System.currentTimeMillis();
         pipeline.annotate(coreDocument);
         Annotation document = coreDocument.annotation();
-        LOG.info("Time for pipeline annotation: " + (System.currentTimeMillis() + startAnnotation) + ". Text length: " + text.length());
+        LOG.info("Time for pipeline annotation (" + pipelineSpecification.getName() + "): " + (System.currentTimeMillis() + startAnnotation) + ". Text length: " + text.length());
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.forEach((sentence) -> {
