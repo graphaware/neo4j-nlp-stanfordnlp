@@ -22,6 +22,7 @@ import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.model.NERModelTool;
 import com.graphaware.nlp.util.FileUtils;
+import com.graphaware.nlp.util.Timer;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
 import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -43,6 +44,7 @@ import edu.stanford.nlp.util.StringUtils;
 import org.neo4j.logging.Log;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -62,7 +64,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     public static final String SENTIMENT = "sentiment";
 
     protected String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
-    protected final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
+    protected final Map<String, StanfordCoreNLP> pipelines = new ConcurrentHashMap<>();
 
     public static final String PROCESSING_STEP_FINE_GRAINED_NER = "fineGrainedNER";
     private static final boolean DEFAULT_FINE_GRAINED_NER = false;
@@ -104,13 +106,16 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
+        Timer timer = Timer.start();
         checkPipelineExistOrCreate(pipelineSpecification);
+        timer.lap("pipeline check");
         AnnotatedText result = new AnnotatedText();
         CoreDocument coreDocument = new CoreDocument(text);
         StanfordCoreNLP pipeline = pipelines.get(pipelineSpecification.getName());
         long startAnnotation = -System.currentTimeMillis();
         pipeline.annotate(coreDocument);
         Annotation document = coreDocument.annotation();
+        timer.lap("annotation");
         LOG.info("Time for pipeline annotation (" + pipelineSpecification.getName() + "): " + (System.currentTimeMillis() + startAnnotation) + ". Text length: " + text.length());
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
@@ -119,18 +124,22 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
 
             extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER(), pipelineSpecification);
+            timer.lap("extractTokens::sentence-" + sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_SENTIMENT, false)) {
                 extractSentiment(sentence, newSentence);
             }
+            timer.lap("extractSentiment::sentence-" + sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_PHRASE, false)) {
                 extractPhrases(sentence, newSentence);
             }
+            timer.lap("extractPhrases::sentence-" + sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY, false)) {
                 extractDependencies(sentence, newSentence);
             }
+            timer.lap("extractDeps::sentence-" + sentenceNumber);
 
             filterWhitelist(newSentence, pipelineSpecification);
             result.addSentence(newSentence);
@@ -139,6 +148,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         if (pipelineSpecification.hasProcessingStep(STEP_RELATIONS, false)) {
             extractRelationship(result, sentences, document);
         }
+        timer.lap("extractRels");
 
         return extendAnnotation(text, lang, pipelineSpecification, result, coreDocument, document, sentences);
     }
