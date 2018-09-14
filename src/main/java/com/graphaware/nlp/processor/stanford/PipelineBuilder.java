@@ -83,9 +83,8 @@ public class PipelineBuilder {
     public PipelineBuilder extractCoref() {
         checkForExistingAnnotators();
         annotators.append("parse, coref");
-        properties.setProperty("coref.doClustering", "true");
-        properties.setProperty("coref.md.type", "rule");
-        properties.setProperty("coref.mode", "statistical");
+        properties.setProperty("coref.maxMentionDistance", "15");
+        properties.setProperty("coref.algorithm", "statistical");
         return this;
     }
 

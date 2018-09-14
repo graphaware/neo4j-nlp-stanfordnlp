@@ -70,6 +70,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     private static final boolean DEFAULT_FINE_GRAINED_NER = false;
 
     protected boolean initiated = false;
+    protected Timer timer;
 
     @Override
     public void init() {
@@ -106,7 +107,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
-        Timer timer = Timer.start();
+        timer = Timer.start();
         checkPipelineExistOrCreate(pipelineSpecification);
         timer.lap("pipeline check");
         AnnotatedText result = new AnnotatedText();
@@ -124,22 +125,17 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             final Sentence newSentence = new Sentence(sentence.toString(), sentenceNumber);
 
             extractTokens(lang, sentence, newSentence, pipelineSpecification.getExcludedNER(), pipelineSpecification);
-            timer.lap("extractTokens::sentence-" + sentenceNumber);
-
             if (pipelineSpecification.hasProcessingStep(STEP_SENTIMENT, false)) {
                 extractSentiment(sentence, newSentence);
             }
-            timer.lap("extractSentiment::sentence-" + sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_PHRASE, false)) {
                 extractPhrases(sentence, newSentence);
             }
-            timer.lap("extractPhrases::sentence-" + sentenceNumber);
 
             if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY, false)) {
                 extractDependencies(sentence, newSentence);
             }
-            timer.lap("extractDeps::sentence-" + sentenceNumber);
 
             filterWhitelist(newSentence, pipelineSpecification);
             result.addSentence(newSentence);
