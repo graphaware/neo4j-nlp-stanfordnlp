@@ -1,6 +1,7 @@
 package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.StanfordNLPIntegrationTest;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import org.junit.Test;
 
@@ -10,7 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-public class PipelineLifecycleTest extends NLPIntegrationTest {
+public class PipelineLifecycleTest extends StanfordNLPIntegrationTest {
 
     private static final String STANFORD_PROCESSOR = StanfordTextProcessor.class.getName();
 
@@ -93,5 +94,4 @@ public class PipelineLifecycleTest extends NLPIntegrationTest {
                 "MERGE (i1a)-[:NEXT_COMMENT]->(i1b)";
         executeInTransaction(query, emptyConsumer());
     }
-
 }
