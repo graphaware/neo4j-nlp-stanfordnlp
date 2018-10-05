@@ -735,7 +735,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         }
 
         String name = pipelineSpecification.getName();
-        PipelineBuilder pipelineBuilder = new PipelineBuilder(name);
+        String language = pipelineSpecification.getLanguage();
+        PipelineBuilder pipelineBuilder = new PipelineBuilder(name, language);
 
         if (pipelineSpecification.hasProcessingStep(STEP_TOKENIZE, true)) {
             pipelineBuilder.tokenize();

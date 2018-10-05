@@ -68,7 +68,7 @@
         <neo4j.version>3.4.7</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.4.7.52.13</nlp.version>
+        <nlp.version>3.4.7.52.14-SNAPSHOT</nlp.version>
     </properties>
 
     <dependencies>
@@ -138,6 +138,40 @@
             <artifactId>stanford-corenlp</artifactId>
             <version>${stanford.nlp.version}</version>
             <classifier>models</classifier>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-queries</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-queryparser</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.lucene</groupId>
+                    <artifactId>lucene-analyzers-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>edu.stanford.nlp</groupId>
+            <artifactId>stanford-corenlp</artifactId>
+            <version>${stanford.nlp.version}</version>
+            <classifier>models-german</classifier>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>xml-apis</groupId>

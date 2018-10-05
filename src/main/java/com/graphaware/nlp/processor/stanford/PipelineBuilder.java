@@ -3,6 +3,7 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
+import java.io.IOException;
 import java.util.*;
 
 public class PipelineBuilder {
@@ -15,6 +16,19 @@ public class PipelineBuilder {
 
     public PipelineBuilder(String name) {
         this.name = name;
+    }
+
+    public PipelineBuilder(String name, String language) {
+        this(name);
+        if (language != null) {
+            try {
+                properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
+                        + language
+                        + ".properties"));
+            } catch (IOException ex) {
+                throw new RuntimeException("Language not found: " + language, ex);
+            }
+        }
     }
     
     public PipelineBuilder tokenize() {
