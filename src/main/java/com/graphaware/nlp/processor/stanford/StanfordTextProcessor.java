@@ -546,10 +546,19 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
+    public List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification) {
+        return annotateTagsAux(text, lang, pipelines.get(pipelineSpecification.getName()));
+    }
+
+    @Override
     public List<Tag> annotateTags(String text, String lang) {
+        return annotateTagsAux(text, lang, pipelines.get(TOKENIZER));
+    }
+
+    private List<Tag> annotateTagsAux(String text, String lang, StanfordCoreNLP stanfordCoreNLP) {
         List<Tag> result = new ArrayList<>();
         Annotation document = new Annotation(text);
-        pipelines.get(TOKENIZER).annotate(document);
+        stanfordCoreNLP.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
