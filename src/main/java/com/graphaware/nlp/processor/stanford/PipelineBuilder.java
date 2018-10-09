@@ -155,6 +155,15 @@ public class PipelineBuilder {
         return this;
     }
 
+    public PipelineBuilder withCustomLemmas(String filePath) {
+        //annotators.append("custom.lemma");
+        annotators.setLength(0);
+        annotators.append("tokenize,ssplit,pos,custom.lemma,ner");
+        properties.setProperty("custom.lemma.lemmaFile", filePath);
+        properties.setProperty("customAnnotatorClass.custom.lemma", GermanLemmaAnnotator.class.getName());
+        return this;
+    }
+
     public StanfordCoreNLP build() {
         properties.setProperty("annotators", annotators.toString());
         properties.setProperty("threads", String.valueOf(threadsNumber));

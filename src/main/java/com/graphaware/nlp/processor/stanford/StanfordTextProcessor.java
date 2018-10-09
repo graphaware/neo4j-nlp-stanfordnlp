@@ -799,6 +799,10 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             pipelineBuilder.extractRelations();
         }
 
+        if (pipelineSpecification.hasProcessingStep("customLemmas")) {
+            pipelineBuilder.withCustomLemmas(pipelineSpecification.getProcessingStepAsString("customLemmas"));
+        }
+
         Long threadNumber = pipelineSpecification.getThreadNumber();
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
