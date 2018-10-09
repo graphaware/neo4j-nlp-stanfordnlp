@@ -156,11 +156,9 @@ public class PipelineBuilder {
     }
 
     public PipelineBuilder withCustomLemmas(String filePath) {
-        //annotators.append("custom.lemma");
-        annotators.setLength(0);
-        annotators.append("tokenize,ssplit,pos,custom.lemma,ner");
+        checkForExistingAnnotators();
         properties.setProperty("custom.lemma.lemmaFile", filePath);
-        properties.setProperty("customAnnotatorClass.custom.lemma", GermanLemmaAnnotator.class.getName());
+        properties.setProperty("customAnnotatorClass.custom.lemma", CustomLemmaAnnotator.class.getName());
         return this;
     }
 
