@@ -157,6 +157,7 @@ public class PipelineBuilder {
 
     public PipelineBuilder withCustomLemmas(String filePath) {
         checkForExistingAnnotators();
+        annotators.append("custom.lemma");
         properties.setProperty("custom.lemma.lemmaFile", filePath);
         properties.setProperty("customAnnotatorClass.custom.lemma", CustomLemmaAnnotator.class.getName());
         return this;
