@@ -5,7 +5,11 @@ Getting the Software
 ---------------------
 
 ### Server Mode
-When using Neo4j in the standalone <a href="http://docs.neo4j.org/chunked/stable/server-installation.html" target="_blank">standalone server</a> mode, you will need the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a>.jar files (both of which you can download here) dropped into the plugins directory of your Neo4j installation. Finally, the following needs to be appended to the `neo4j.conf` file in the `config/` directory:
+When using Neo4j in the standalone <a href="http://docs.neo4j.org/chunked/stable/server-installation.html" target="_blank">standalone server</a>
+mode, you will need the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a>
+and <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a>.jar files (both of which you can download here)
+dropped into the plugins directory of your Neo4j installation. Finally, the following needs to be appended to the `neo4j.conf` file in
+the `config/` directory:
 
 ```
   dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
@@ -15,7 +19,8 @@ When using Neo4j in the standalone <a href="http://docs.neo4j.org/chunked/stable
 ```
 
 ### For Developers
-This package is an extention of the <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a>, which therefore needs to be packaged and installed beforehand. No other dependencies required.
+This package is an extention of the <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a>,
+which therefore needs to be packaged and installed beforehand. No other dependencies required.
 
 ```
   cd neo4j-nlp
@@ -29,7 +34,10 @@ This package is an extention of the <a href="https://github.com/graphaware/neo4j
 Introduction and How-To
 -------------------------
 
-The Stanford NLP library provides basic features for processing natural language text: sentence segmentation, tokenization, lemmatization, part-of-speach tagging, named entities identification, chunking, parsing and sentiment analysis. It is implemented by extending the general <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a> package. A TextProcessor could be explicitly set to Stanford NLP, but it's not necessary as it's currently the default option.
+The Stanford NLP library provides basic features for processing natural language text: sentence segmentation, tokenization,
+lemmatization, part-of-speach tagging, named entities identification, chunking, parsing and sentiment analysis.
+It is implemented by extending the general <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a> package.
+A TextProcessor could be explicitly set to Stanford NLP, but it's not necessary as it's currently the default option.
 
 ### Tag Extraction / Annotations
 ```
