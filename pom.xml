@@ -22,7 +22,6 @@
         <connection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</connection>
         <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</developerConnection>
         <url>git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</url>
-        <tag>nlp-stanfordnlp-3.4.7.52.13</tag>
     </scm>
 
     <developers>
@@ -68,7 +67,7 @@
         <neo4j.version>3.4.9</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.4.9.52.15</nlp.version>
+        <nlp.version>3.4.9.52.16-SNAPSHOT</nlp.version>
     </properties>
 
     <dependencies>
