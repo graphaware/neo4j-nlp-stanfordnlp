@@ -15,7 +15,7 @@ public class GermanAnnotationWithCustomNERTest extends StanfordNLPIntegrationTes
     @Test
     public void testAnnotatingTextWithDefaultCustomPipeline() {
         addModel();
-        String q = "CALL ga.nlp.processor.addPipeline({\n" +
+        String q = "CALL ga.nlp.processor.addPipeline({language:'en', \n" +
                 "name: \"muz-ner\",\n" +
                 "textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\",\n" +
                 "processingSteps: {tokenize: true, ner: true, customNER: 'music'},\n" +

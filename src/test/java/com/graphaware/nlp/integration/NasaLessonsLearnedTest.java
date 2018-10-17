@@ -23,7 +23,7 @@ public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
         executeInTransaction(t, emptyConsumer());
 
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language: 'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-nasa-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language:'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-nasa-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
 
         // Import some text
@@ -52,24 +52,5 @@ public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
         executeInTransaction("MATCH (n:NER_Mission) RETURN count(n) AS c", (result -> {
             assertTrue((long) result.next().get("c") > 0);
         }));
-    }
-
-    private void importDataset() {
-        String query =
-                "LOAD CSV WITH HEADERS FROM \"https://raw.githubusercontent.com/davidmeza1/doctopics/master/data/llis.csv\" AS line\n" +
-                "WITH line, SPLIT(line.LessonDate, '-') AS date LIMIT 10\n" +
-                "CREATE (lesson:Lesson { name: toInteger(line.`LessonId`) } )\n" +
-                "SET lesson.year = toInteger(date[0]),\n" +
-                "    lesson.month = toInteger(date[1]),\n" +
-                "    lesson.day = toInteger(date[2]),\n" +
-                "    lesson.title = (line.Title),\n" +
-                "    lesson.abstract = (line.Abstract),\n" +
-                "    lesson.lesson = (line.Lesson),\n" +
-                "    lesson.org = (line.MissionDirectorate),\n" +
-                "    lesson.safety = (line.SafetyIssue),\n" +
-                "    lesson.url = (line.url)";
-
-        executeInTransaction(query, emptyConsumer());
-        executeInTransaction("MATCH (n:Lesson) SET n.text = n.title + '. ' + n.abstract + '. ' + n.lesson", emptyConsumer());
     }
 }

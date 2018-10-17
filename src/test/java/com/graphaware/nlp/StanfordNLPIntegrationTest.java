@@ -46,7 +46,7 @@ public abstract class StanfordNLPIntegrationTest extends NLPIntegrationTest {
     }
 
     protected void createPipelineWithDependency(String name) {
-        executeInTransaction("CALL ga.nlp.processor.addPipeline({name: {p0}, textProcessor: {p1} , processingSteps: {tokenize:true, ner:true, dependency: true}})",
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({language:'en', name: {p0}, textProcessor: {p1} , processingSteps: {tokenize:true, ner:true, dependency: true}})",
                 buildSeqParameters(name, StanfordTextProcessor.class.getName()), emptyConsumer());
     }
 

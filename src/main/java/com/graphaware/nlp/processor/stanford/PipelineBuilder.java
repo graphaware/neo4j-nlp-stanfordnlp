@@ -178,7 +178,7 @@ public class PipelineBuilder {
             currentModels = DEFAULT_ENGLISH_NER_MODEL;
         }
         String sep = currentModels.trim().equalsIgnoreCase("") ? "" : ",";
-        String newModels = currentModels + sep + modelPaths;
+        String newModels = modelPaths + sep + currentModels;
         LOG.info("Setting NER MODELS property to " + newModels);
         properties.setProperty("ner.model", newModels);
         return this;

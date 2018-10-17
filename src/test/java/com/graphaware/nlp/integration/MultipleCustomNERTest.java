@@ -12,19 +12,14 @@ public class MultipleCustomNERTest extends StanfordNLPIntegrationTest {
 
     @Test
     public void testMultipleCustomNERCanBeLoaded() {
-        String modelsPath = getClass().getClassLoader().getResource("").getPath();
-        executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
+        String modelNasa = getClass().getClassLoader().getResource("nasa-model.gz").getPath();
+        String modelCar = getClass().getClassLoader().getResource("car-model.gz").getPath();
 
-        String nasaq = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"nasa-ner\", alg: \"ner\", inputFile: 'nasa-train.tsv', trainingParameters: {iter: 10}})";
-        executeInTransaction(nasaq, emptyConsumer());
-
-        executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
-
-        String carq = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"car-ner\", alg: \"ner\", inputFile: 'car-marque-train.tsv', trainingParameters: {iter: 10}})";
-        executeInTransaction(carq, emptyConsumer());
+        executeInTransaction("CALL ga.nlp.config.model.add('nasa-ner', $p0)", buildSeqParameters(modelNasa), emptyConsumer());
+        executeInTransaction("CALL ga.nlp.config.model.add('car-ner', $p0)", buildSeqParameters(modelCar), emptyConsumer());
 
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"nasa-ner,car-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language:'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"nasa-ner,car-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
 
         // Import some texts

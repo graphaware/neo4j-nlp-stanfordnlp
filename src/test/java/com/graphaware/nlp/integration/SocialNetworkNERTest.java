@@ -18,11 +18,11 @@ public class SocialNetworkNERTest extends StanfordNLPIntegrationTest {
                 "\n" +
                 "Inside the social network’s offices, the bonds began to fray. An ethics problem metastisized into a morale problem. Slogans took on sinister second meanings. The Kool-Aid tasted different.";
 
-        String q = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'social-network-train.tsv', trainingParameters: {iter: 10}})";
-        executeInTransaction(q, emptyConsumer());
+        String modelSN = getClass().getClassLoader().getResource("socialnetwork-model.gz").getPath();
+        executeInTransaction("CALL ga.nlp.config.model.add('test-ner', $p0)", buildSeqParameters(modelSN), emptyConsumer());
 
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language:'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
 
         // Import some text
@@ -43,23 +43,19 @@ public class SocialNetworkNERTest extends StanfordNLPIntegrationTest {
             }
         }));
         TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
-        testNLPGraph.assertTagWithValueHasNE("Facebook", "SOCIALNETWORK");
-        testNLPGraph.assertTagWithValueHasNE("Snapchat", "SOCIALNETWORK");
-        testNLPGraph.assertTagWithValueHasNE("Twitter", "SOCIALNETWORK");
+        testNLPGraph.assertTagOccurrenceWithValueAndNeExist("Snapchat", "NE_Social_network");
     }
 
     @Test
     public void testDefaultNERIsStillUsed() {
         clearDb();
         String text = "Bill Gates co-founded Microsoft in 1975, and has continued his involvement with the company as a technology advisor and board member. Gates also has investments in Canadian National Railway, AutoNation, and more. He and his wife Melinda founded the Bill & Melinda Gates Foundation which aims to help kindergarten through 12th grade students in the US.";
-        String modelsPath = getClass().getClassLoader().getResource("").getPath();
-        executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
-        String q = "CALL ga.nlp.processor.train({textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\", modelIdentifier: \"test-ner\", alg: \"ner\", inputFile: 'social-small.tsv', trainingParameters: {iter: 10}})";
-        executeInTransaction(q, emptyConsumer());
+        String modelSN = getClass().getClassLoader().getResource("socialnetwork-model.gz").getPath();
+        executeInTransaction("CALL ga.nlp.config.model.add('test-ner', $p0)", buildSeqParameters(modelSN), emptyConsumer());
         // Import some text
         executeInTransaction("CREATE (n:Document) SET n.text = {text}", Collections.singletonMap("text", text), emptyConsumer());
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language:'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
         // Annotate
         executeInTransaction("MATCH (n:Document) CALL ga.nlp.annotate({text: n.text, id:id(n), pipeline: 'customNER', checkLanguage:false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
