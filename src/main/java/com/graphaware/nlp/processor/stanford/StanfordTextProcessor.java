@@ -153,12 +153,22 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         return annotatedText;
     }
 
-    protected String getCustomModelsPaths(String modelIds) {
+    protected String getCustomModelsPaths(PipelineSpecification pipelineSpecification) {
+        String modelIds = pipelineSpecification.getProcessingStepAsString("customNER");
         final List<String> modelPaths = new ArrayList<>();
         Arrays.asList(modelIds.split(",")).forEach(id -> {
             modelPaths.add(getModelLocation(id));
         });
-        modelPaths.add("edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
+
+        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
+            modelPaths.add("edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
+        }
+
+//        if (pipelineSpecification.getLanguage().equalsIgnoreCase("german")) {
+//            String m = "/edu/stanford/nlp/models/ner/german.conll.germeval2014.hgc_175m_600.crf.ser.gz";
+//            modelPaths.add(m);
+//        }
+
         return org.apache.commons.lang3.StringUtils.join(modelPaths, ",");
     }
 
@@ -804,7 +814,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
         try {
             if (pipelineSpecification.hasProcessingStep("customNER")) {
-                String modelPath = getCustomModelsPaths(pipelineSpecification.getProcessingStepAsString("customNER"));
+                String modelPath = getCustomModelsPaths(pipelineSpecification);
                 pipelineBuilder.withCustomModels(modelPath);
                 LOG.info("Custom NER models loaded from : " + modelPath);
             }
