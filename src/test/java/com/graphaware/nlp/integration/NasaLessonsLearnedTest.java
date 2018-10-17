@@ -23,7 +23,7 @@ public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
         executeInTransaction(t, emptyConsumer());
 
         // Create pipeline
-        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-nasa-ner\"}})";
+        String addPipelineQuery = "CALL ga.nlp.processor.addPipeline({language: 'en', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customNER', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: \"test-nasa-ner\"}})";
         executeInTransaction(addPipelineQuery, emptyConsumer());
 
         // Import some text

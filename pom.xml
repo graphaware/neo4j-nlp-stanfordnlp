@@ -407,12 +407,12 @@
                 <version>2.22.1</version>
                 <configuration>
                     <argLine>-Xmx8g</argLine>
-                    <classpathDependencyExcludes>
-                        <groupId>edu.stanford.nlp</groupId>
-                        <artifactId>stanford-corenlp</artifactId>
-                        <version>${stanford.nlp.version}</version>
-                        <classifier>models-german</classifier>
-                    </classpathDependencyExcludes>
+                    <!--<classpathDependencyExcludes>-->
+                        <!--<groupId>edu.stanford.nlp</groupId>-->
+                        <!--<artifactId>stanford-corenlp</artifactId>-->
+                        <!--<version>${stanford.nlp.version}</version>-->
+                        <!--<classifier>models-german</classifier>-->
+                    <!--</classpathDependencyExcludes>-->
                 </configuration>
             </plugin>
             <plugin>

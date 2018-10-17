@@ -1,17 +1,23 @@
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.exception.InvalidPipelineException;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import org.neo4j.logging.Log;
 
 import java.io.IOException;
 import java.util.*;
 
 public class PipelineBuilder {
 
+    private static final Log LOG = LoggerFactory.getLogger(PipelineBuilder.class);
+    private static final String DEFAULT_ENGLISH_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
+
     protected final Properties properties = new Properties();
     protected final StringBuilder annotators = new StringBuilder(); //basics annotators
     protected int threadsNumber = 4;
+    private String language;
     
     protected final String name;
 
@@ -22,14 +28,29 @@ public class PipelineBuilder {
 
     public PipelineBuilder(String name, String language) {
         this(name);
-        if (language != null) {
+        this.language = language;
+        if (language != null && !language.equalsIgnoreCase("en")) {
             try {
                 properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
                         + language
                         + ".properties"));
             } catch (IOException ex) {
+//                fallbackLoadProperties(language);
                 throw new InvalidPipelineException("Language not found: " + language);
             }
+        }
+    }
+
+    private void fallbackLoadProperties(String language) {
+        if (language.equalsIgnoreCase("en")) {
+            try {
+                properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP"
+                        + ".properties"));
+            } catch (IOException ex) {
+                throw new InvalidPipelineException("Language not found: " + language);
+            }
+        } else {
+            throw new InvalidPipelineException("Language not found: " + language);
         }
     }
     
@@ -86,7 +107,6 @@ public class PipelineBuilder {
     public PipelineBuilder extractSentiment() {
         checkForExistingAnnotators();
         annotators.append("parse, sentiment");
-        //properties.setProperty("parse.model", "edu/stanford/nlp/models/srparser/englishSR.ser.gz");
         return this;
     }
 
@@ -153,7 +173,14 @@ public class PipelineBuilder {
     }
 
     public PipelineBuilder withCustomModels(String modelPaths) {
-        properties.setProperty("ner.model", modelPaths);
+        String currentModels = properties.getProperty("ner.model", "");
+        if (currentModels.equalsIgnoreCase("") && language.equalsIgnoreCase("en")) {
+            currentModels = DEFAULT_ENGLISH_NER_MODEL;
+        }
+        String sep = currentModels.trim().equalsIgnoreCase("") ? "" : ",";
+        String newModels = currentModels + sep + modelPaths;
+        LOG.info("Setting NER MODELS property to " + newModels);
+        properties.setProperty("ner.model", newModels);
         return this;
     }
 
@@ -195,5 +222,9 @@ public class PipelineBuilder {
         });
 
         return list;
+    }
+
+    public String getDefaultNERModel() {
+        return properties.getProperty("ner.model", "");
     }
 }

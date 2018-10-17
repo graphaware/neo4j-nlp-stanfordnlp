@@ -159,10 +159,10 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         Arrays.asList(modelIds.split(",")).forEach(id -> {
             modelPaths.add(getModelLocation(id));
         });
-
-        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
-            modelPaths.add("edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
-        }
+//
+//        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
+//            modelPaths.add("edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
+//        }
 
 //        if (pipelineSpecification.getLanguage().equalsIgnoreCase("german")) {
 //            String m = "/edu/stanford/nlp/models/ner/german.conll.germeval2014.hgc_175m_600.crf.ser.gz";
@@ -887,11 +887,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         return name;
     }
 
-    protected String getDefaultNERModels(PipelineSpecification pipelineSpecification) {
-        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
-            return DEFAULT_NER_MODEL;
-        }
-
-        return "";
+    protected String getNERModelsForPipeline(PipelineSpecification pipelineSpecification) {
+        return pipelines.get(pipelineSpecification.getName()).getProperties().getProperty("ner.model", "");
     }
 }
