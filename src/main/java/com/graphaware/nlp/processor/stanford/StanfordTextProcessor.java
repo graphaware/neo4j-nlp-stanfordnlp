@@ -886,4 +886,12 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         name += ".ser.gz";
         return name;
     }
+
+    protected String getDefaultNERModels(PipelineSpecification pipelineSpecification) {
+        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
+            return DEFAULT_NER_MODEL;
+        }
+
+        return "";
+    }
 }
