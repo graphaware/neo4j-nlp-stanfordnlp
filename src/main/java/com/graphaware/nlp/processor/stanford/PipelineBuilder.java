@@ -1,5 +1,6 @@
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.nlp.exception.InvalidPipelineException;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 
@@ -15,6 +16,7 @@ public class PipelineBuilder {
     protected final String name;
 
     public PipelineBuilder(String name) {
+
         this.name = name;
     }
 
@@ -26,7 +28,7 @@ public class PipelineBuilder {
                         + language
                         + ".properties"));
             } catch (IOException ex) {
-                throw new RuntimeException("Language not found: " + language, ex);
+                throw new InvalidPipelineException("Language not found: " + language);
             }
         }
     }
