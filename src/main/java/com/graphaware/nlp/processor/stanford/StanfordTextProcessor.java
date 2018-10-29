@@ -38,6 +38,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
+import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -70,7 +71,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     private static final boolean DEFAULT_FINE_GRAINED_NER = false;
 
     protected boolean initiated = false;
-    protected Timer timer;
 
     @Override
     public void init() {
@@ -107,7 +107,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
-        timer = Timer.start();
+        Timer timer = Timer.start();
         checkPipelineExistOrCreate(pipelineSpecification);
         timer.lap("pipeline check");
         AnnotatedText result = new AnnotatedText();
