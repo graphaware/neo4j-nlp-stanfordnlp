@@ -28,7 +28,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class ConceptNet5Test extends StanfordNLPIntegrationTest {
+public class
+ConceptNet5Test extends StanfordNLPIntegrationTest {
     
     public static final String TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
 
@@ -36,13 +37,13 @@ public class ConceptNet5Test extends StanfordNLPIntegrationTest {
     public void testImportHierarchy() {
 
         createPipeline(TEXT_PROCESSOR, "concept", "tokenize");
-        PipelineSpecification pipelineSpecification = NLPManager.getInstance().getPipelineSpecification("concept");
+        PipelineSpecification pipelineSpecification = NLPManager.getInstance().getTextProcessorsManager().getPipelineSpecification("concept");
         TextProcessor textProcessor = getNLPManager().getTextProcessorsManager().getTextProcessor(TEXT_PROCESSOR);
         //ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
         ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://api.conceptnet.io").build();
         String lang = "en";
-        Tag source = textProcessor.annotateTag("circuit", lang, pipelineSpecification);
-        List<Tag> result = instance.importHierarchy("start", source, true, Arrays.asList("en"), 2, textProcessor, pipelineSpecification, Arrays.asList("IsA"), Arrays.asList("NN"), 50, 0.0d);
+        Tag source = textProcessor.annotateTag("circuit", pipelineSpecification);
+        List<Tag> result = instance.importHierarchy(source, ConceptNet5Enricher.RelDirection.OUT, true, Arrays.asList("en"), 2, Arrays.asList("IsA"), Arrays.asList("NN"), 50, 0.0d);
         assertTrue(result.size() > 0);
         //assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.

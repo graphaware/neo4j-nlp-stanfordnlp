@@ -3,10 +3,12 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.exception.InvalidPipelineException;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
+import com.graphaware.nlp.processor.stanford.annotators.StopwordAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.neo4j.logging.Log;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class PipelineBuilder {
@@ -31,12 +33,14 @@ public class PipelineBuilder {
         this.language = language;
         if (language != null && !language.equalsIgnoreCase("en")) {
             try {
-                properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
-                        + language
-                        + ".properties"));
-            } catch (IOException ex) {
+                String languageName = new Locale(language).getDisplayLanguage();
+                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
+                        + languageName.toLowerCase()
+                        + ".properties");
+                properties.load(resourceAsStream);
+            } catch (Exception ex) {
 //                fallbackLoadProperties(language);
-                throw new InvalidPipelineException("Language not found: " + language);
+                throw new InvalidPipelineException("Language module not found for: " + language);
             }
         }
     }
@@ -124,13 +128,6 @@ public class PipelineBuilder {
         return this;
     }
 
-    public PipelineBuilder openIE() {
-        checkForExistingAnnotators();
-        annotators.append("ner, depparse, natlog, openie");
-
-        return this;
-    }
-
     public PipelineBuilder defaultStopWordAnnotator() {
         checkForExistingAnnotators();
         annotators.append("stopword");
@@ -181,14 +178,6 @@ public class PipelineBuilder {
         String newModels = modelPaths + sep + currentModels;
         LOG.info("Setting NER MODELS property to " + newModels);
         properties.setProperty("ner.model", newModels);
-        return this;
-    }
-
-    public PipelineBuilder withCustomLemmas(String filePath) {
-        checkForExistingAnnotators();
-        annotators.append("custom.lemma");
-        properties.setProperty("custom.lemma.lemmaFile", filePath);
-        properties.setProperty("customAnnotatorClass.custom.lemma", CustomLemmaAnnotator.class.getName());
         return this;
     }
 

@@ -17,7 +17,6 @@ package com.graphaware.nlp.procedure;
 
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
-import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;

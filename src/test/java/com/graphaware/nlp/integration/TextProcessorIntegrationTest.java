@@ -40,7 +40,7 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
         }));
         String text = "Neo4j is built from the ground up to be a graph database.";
         try (Transaction tx = getDatabase().beginTx()) {
-            getNLPManager().annotateTextAndPersist(text, "test", StanfordTextProcessor.class.getName(), "customie", false, false);
+            getNLPManager().annotateTextAndPersist(text, "test", "customie");
             tx.success();
         }
         executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {
@@ -56,7 +56,7 @@ public class TextProcessorIntegrationTest extends StanfordNLPIntegrationTest {
         }));
         String text = "Neo4j is built from the ground up to be a graph database.";
         try (Transaction tx = getDatabase().beginTx()) {
-            getNLPManager().annotateTextAndPersist(text, "test", StanfordTextProcessor.class.getName(), "customie", false, false);
+            getNLPManager().annotateTextAndPersist(text, "test", "customie");
             tx.success();
         }
         executeInTransaction("MATCH (n:Phrase) RETURN n", (result -> {

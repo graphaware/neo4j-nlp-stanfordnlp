@@ -43,7 +43,7 @@ public class POSTest {
         Map<String, Object> processingSteps = new HashMap<>();
         processingSteps.put(AbstractTextProcessor.STEP_TOKENIZE, true);
         processingSteps.put(AbstractTextProcessor.STEP_NER, true);
-        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
+        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", "en", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
         PIPELINE_DEFAULT = pipelineSpecification;
         textProcessor.createPipeline(PIPELINE_DEFAULT);
     }
@@ -58,14 +58,14 @@ public class POSTest {
         String QUESTION_TEXT_6 = "";
         String QUESTION_TEXT_7 = "";
 
-        AnnotatedText annotatedText = textProcessor.annotateText(QUESTION_TEXT_1, "en", PIPELINE_DEFAULT);
+        AnnotatedText annotatedText = textProcessor.annotateText(QUESTION_TEXT_1, PIPELINE_DEFAULT);
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(1);
         test.assertTag(newTag("who", Collections.emptyList(), Collections.singletonList("WP")));
         test.assertTag(newTag("invent", Collections.emptyList(), Collections.singletonList("VBD")));
         test.assertTag(newTag("papyrus", Collections.emptyList(), Collections.singletonList("NN")));
 
-        annotatedText = textProcessor.annotateText(QUESTION_TEXT_2, "en", PIPELINE_DEFAULT);
+        annotatedText = textProcessor.annotateText(QUESTION_TEXT_2, PIPELINE_DEFAULT);
         test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(1);
         test.assertTag(newTag("what", Collections.emptyList(), Collections.singletonList("WP")));

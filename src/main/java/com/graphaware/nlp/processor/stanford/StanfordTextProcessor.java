@@ -21,6 +21,7 @@ import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.stanford.model.NERModelTool;
+import com.graphaware.nlp.processor.stanford.annotators.StopwordAnnotator;
 import com.graphaware.nlp.util.FileUtils;
 import com.graphaware.nlp.util.Timer;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
@@ -56,9 +57,9 @@ import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_S
 public class StanfordTextProcessor extends AbstractTextProcessor {
 
     private static final Log LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
-    protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
+    //protected static final String CORE_PIPELINE_NAME = "StanfordNLP.CORE";
     private static final String STEP_RELATIONS = "relations";
-    protected static final String DEFAULT_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
+    //protected static final String DEFAULT_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
 
     public static final String TOKENIZER = "tokenizer";
     public static final String SENTIMENT = "sentiment";
@@ -70,7 +71,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     private static final boolean DEFAULT_FINE_GRAINED_NER = false;
 
     protected boolean initiated = false;
-    protected Timer timer;
 
     @Override
     public void init() {
@@ -81,10 +81,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         return "stanford";
     }
 
-    @Override
-    public String override() {
-        return null;
-    }
 
     public StanfordCoreNLP getPipeline(String name) {
         if (name == null || name.isEmpty()) {
@@ -106,8 +102,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
-        timer = Timer.start();
+    public AnnotatedText annotateText(String text, PipelineSpecification pipelineSpecification) {
+        Timer timer = Timer.start();
+        String lang = pipelineSpecification.getLanguage();
         checkPipelineExistOrCreate(pipelineSpecification);
         timer.lap("pipeline check");
         AnnotatedText result = new AnnotatedText();
@@ -434,14 +431,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public Tag annotateSentence(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public Tag annotateSentence(String text, PipelineSpecification pipelineSpecification) {
         Annotation document = new Annotation(text);
         pipelines.get(pipelineSpecification.getName()).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
             Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(lang, token))
+                    .map((token) -> getTag(pipelineSpecification.getLanguage(), token))
                     .filter((tag) -> (tag != null) && checkLemmaIsValid(tag.getLemma()))
                     .findFirst();
             if (oTag.isPresent()) {
@@ -452,7 +449,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public Tag annotateTag(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public Tag annotateTag(String text, PipelineSpecification pipelineSpecification) {
         Annotation document = new Annotation(text);
         pipelines.get(pipelineSpecification.getName()).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -460,6 +457,7 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         if (sentence.isPresent()) {
             List<CoreLabel> tokens = sentence.get().get(CoreAnnotations.TokensAnnotation.class);
             if (tokens != null) {
+                String lang = pipelineSpecification.getLanguage();
                 if (tokens.size() == 1) {
                     Optional<Tag> oTag = tokens.stream()
                             .map((token) -> getTag(lang, token))
@@ -556,8 +554,8 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification) {
-        return annotateTagsAux(text, lang, pipelines.get(pipelineSpecification.getName()));
+    public List<Tag> annotateTags(String text, PipelineSpecification pipelineSpecification) {
+        return annotateTagsAux(text, pipelineSpecification.getLanguage(), pipelines.get(pipelineSpecification.getName()));
     }
 
     @Override
@@ -756,7 +754,14 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         String name = pipelineSpecification.getName();
         String language = pipelineSpecification.getLanguage();
         PipelineBuilder pipelineBuilder = new PipelineBuilder(name, language);
+        pipelineBuilder = createPipelineAux(pipelineSpecification, pipelineBuilder);
+        if (pipelineBuilder != null) {
+            StanfordCoreNLP pipeline = pipelineBuilder.build();
+            pipelines.put(name, pipeline);
+        }
+    }
 
+    protected PipelineBuilder createPipelineAux(PipelineSpecification pipelineSpecification, PipelineBuilder pipelineBuilder) {
         if (pipelineSpecification.hasProcessingStep(STEP_TOKENIZE, true)) {
             pipelineBuilder.tokenize();
         }
@@ -776,10 +781,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
 
         if (pipelineSpecification.hasProcessingStep(STEP_DEPENDENCY)) {
             pipelineBuilder.dependencies();
-        }
-
-        if (pipelineSpecification.hasProcessingStep(STEP_IE)) {
-            pipelineBuilder.openIE();
         }
 
         String stopWordList = AbstractTextProcessor.DEFAULT_STOP_WORD_LIST;
@@ -809,10 +810,6 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             pipelineBuilder.extractRelations();
         }
 
-        if (pipelineSpecification.hasProcessingStep("customLemmas")) {
-            pipelineBuilder.withCustomLemmas(pipelineSpecification.getProcessingStepAsString("customLemmas"));
-        }
-
         Long threadNumber = pipelineSpecification.getThreadNumber();
         pipelineBuilder.threadNumber(threadNumber.intValue());
 
@@ -824,17 +821,9 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
             }
         } catch (Exception e) {
             LOG.error(e.getMessage());
-            return;
+            return null;
         }
-
-        extendPipeline(pipelineSpecification, pipelineBuilder);
-
-        StanfordCoreNLP pipeline = pipelineBuilder.build();
-        pipelines.put(name, pipeline);
-    }
-
-    protected void extendPipeline(PipelineSpecification pipelineSpecification, PipelineBuilder builder) {
-        //
+        return pipelineBuilder;
     }
 
     @Override

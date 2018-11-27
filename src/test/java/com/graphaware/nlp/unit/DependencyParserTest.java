@@ -32,7 +32,7 @@ public class DependencyParserTest {
         processingSteps.put(AbstractTextProcessor.STEP_TOKENIZE, true);
         processingSteps.put(AbstractTextProcessor.STEP_NER, true);
         processingSteps.put(AbstractTextProcessor.STEP_DEPENDENCY, true);
-        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
+        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", "en", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
         textProcessor.createPipeline(pipelineSpecification);
         PIPELINE_DEFAULT = pipelineSpecification;
     }
@@ -63,7 +63,7 @@ public class DependencyParserTest {
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline("default");
         String text = "Donald Trump flew yesterday to New York City";
 
-        AnnotatedText at = textProcessor.annotateText(text, "en", PIPELINE_DEFAULT);
+        AnnotatedText at = textProcessor.annotateText(text, PIPELINE_DEFAULT);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -85,7 +85,7 @@ public class DependencyParserTest {
         String text = "Softfoot and Small Paul would kill the Old Beard, Dirk would do Blane, and Lark and his cousins would silence Bannen and old Dywen, to keep them from sniffing after their trail.";
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline("default");
 
-        AnnotatedText at = textProcessor.annotateText(text, "en", PIPELINE_DEFAULT);
+        AnnotatedText at = textProcessor.annotateText(text, PIPELINE_DEFAULT);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -113,7 +113,7 @@ public class DependencyParserTest {
         PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(customPipeline);
         ((StanfordTextProcessor) textProcessor).createPipeline(pipelineSpecification);
 
-        textProcessor.annotateText(text, "en", pipelineSpecification);
+        textProcessor.annotateText(text, pipelineSpecification);
 
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -136,6 +136,6 @@ public class DependencyParserTest {
         StanfordCoreNLP pipeline = ((StanfordTextProcessor) textProcessor).getPipeline("default");
         String text = "Donald Trump flew yesterday to New York City";
 
-        AnnotatedText at = textProcessor.annotateText(text, "en", PIPELINE_DEFAULT);
+        AnnotatedText at = textProcessor.annotateText(text, PIPELINE_DEFAULT);
     }
 }
