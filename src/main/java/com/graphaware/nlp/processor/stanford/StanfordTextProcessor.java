@@ -18,10 +18,10 @@ package com.graphaware.nlp.processor.stanford;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.*;
-import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.processor.stanford.model.NERModelTool;
+import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.processor.stanford.annotators.StopwordAnnotator;
+import com.graphaware.nlp.processor.stanford.model.NERModelTool;
 import com.graphaware.nlp.util.FileUtils;
 import com.graphaware.nlp.util.Timer;
 import edu.stanford.nlp.coref.CorefCoreAnnotations;
@@ -280,7 +280,12 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
                         currToken.setEndPosition(token.endPosition());
                     } else {
                         // happens for eg when there is a space before a Tag, hence the "Before"
-                        String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
+                        String before;
+                        if (token.keySet().contains(CoreAnnotations.BeforeAnnotation.class)) {
+                            before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
+                        } else {
+                            before = " ";
+                        }
                         String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
                         currToken.updateToken(before, before);
                         currToken.updateTokenAndTokenId(currentText, token.originalText(), tokenId);
