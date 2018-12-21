@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>nlp-stanfordnlp</artifactId>
-    <version>3.5.0.53.17-SNAPSHOT</version>
+    <version>3.5.1.53.17-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -63,11 +63,11 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.9.2</stanford.nlp.version>
-        <graphaware.version>3.5.0.53</graphaware.version>
+        <graphaware.version>3.5.1.53</graphaware.version>
         <neo4j.version>3.5.0</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.5.0.53.17-SNAPSHOT</nlp.version>
+        <nlp.version>3.5.1.53.16</nlp.version>
     </properties>
 
     <dependencies>
