@@ -22,7 +22,8 @@
         <connection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</connection>
         <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</developerConnection>
         <url>git@github.com:graphaware/neo4j-nlp-stanfordnlp.git</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <developers>
         <developer>
@@ -71,15 +72,24 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
             <version>${nlp.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j</artifactId>
+            <groupId>com.graphaware.neo4j</groupId>
+            <artifactId>common</artifactId>
+            <version>${graphaware.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j.app</groupId>
+            <artifactId>neo4j-server</artifactId>
             <version>${neo4j.version}</version>
             <scope>provided</scope>
             <exclusions>
@@ -103,12 +113,9 @@
                     <groupId>javax.xml.bind</groupId>
                     <artifactId>jaxb-api</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-impl</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
@@ -163,35 +170,27 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.reflections/reflections -->
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.11</version>
-        </dependency>
-
-
-
-        <!-- TEST DEPENDENCIES -->
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>runtime</artifactId>
             <version>${graphaware.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>server</artifactId>
             <version>${graphaware.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>tests</artifactId>
@@ -212,12 +211,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>resttest</artifactId>
             <scope>test</scope>
             <version>${resttest.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>nlp</artifactId>
@@ -225,12 +226,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.graphaware.neo4j</groupId>
-            <artifactId>common</artifactId>
-            <version>${graphaware.version}</version>
-            <scope>provided</scope>
-        </dependency>
+
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
