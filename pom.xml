@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>nlp-stanfordnlp</artifactId>
-    <version>3.4.9.52.16-SNAPSHOT</version>
+    <version>3.5.1.53.17-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -62,12 +62,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.9.2</stanford.nlp.version>
-        <graphaware.version>3.4.9.52</graphaware.version>
-        <resttest.version>${graphaware.version}.18</resttest.version>
-        <neo4j.version>3.4.9</neo4j.version>
+        <graphaware.version>3.5.1.53</graphaware.version>
+        <resttest.version>${graphaware.version}.19</resttest.version>
+        <neo4j.version>3.5.1</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.4.9.52.16-SNAPSHOT</nlp.version>
+        <nlp.version>3.5.1.53.17-SNAPSHOT</nlp.version>
     </properties>
 
     <dependencies>
@@ -195,8 +195,22 @@
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
             <artifactId>tests</artifactId>
-            <version>${graphaware.version}</version>
             <scope>test</scope>
+            <version>${graphaware.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.neo4j.app</groupId>
+                    <artifactId>neo4j-server-enterprise</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.neo4j</groupId>
+                    <artifactId>neo4j-com</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.graphaware.neo4j</groupId>
@@ -415,12 +429,7 @@
                 <version>2.22.1</version>
                 <configuration>
                     <argLine>-Xmx8g</argLine>
-                    <!--<classpathDependencyExcludes>-->
-                        <!--<groupId>edu.stanford.nlp</groupId>-->
-                        <!--<artifactId>stanford-corenlp</artifactId>-->
-                        <!--<version>${stanford.nlp.version}</version>-->
-                        <!--<classifier>models-german</classifier>-->
-                    <!--</classpathDependencyExcludes>-->
+                    <reuseForks>false</reuseForks> <!-- This will make sure to spawn a fresh jvm for each test -->
                 </configuration>
             </plugin>
             <plugin>
