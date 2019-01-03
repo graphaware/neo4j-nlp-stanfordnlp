@@ -13,7 +13,6 @@ import static junit.framework.TestCase.assertTrue;
 public class NasaLessonsLearnedTest extends StanfordNLPIntegrationTest {
 
     @Test
-    @Ignore
     public void testNASACustomNER() {
         String modelsPath = getClass().getClassLoader().getResource("").getPath();
         executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
