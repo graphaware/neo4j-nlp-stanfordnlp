@@ -1,33 +1,60 @@
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.exception.InvalidPipelineException;
 import com.graphaware.nlp.processor.AbstractTextProcessor;
+import com.graphaware.nlp.processor.stanford.annotators.StopwordAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import org.neo4j.logging.Log;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class PipelineBuilder {
 
+    private static final Log LOG = LoggerFactory.getLogger(PipelineBuilder.class);
+    private static final String DEFAULT_ENGLISH_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
+
     protected final Properties properties = new Properties();
     protected final StringBuilder annotators = new StringBuilder(); //basics annotators
     protected int threadsNumber = 4;
+    private String language;
     
     protected final String name;
 
     public PipelineBuilder(String name) {
+
         this.name = name;
     }
 
     public PipelineBuilder(String name, String language) {
         this(name);
-        if (language != null) {
+        this.language = language;
+        if (language != null && !language.equalsIgnoreCase("en")) {
             try {
-                properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
-                        + language
+                String languageName = new Locale(language).getDisplayLanguage();
+                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
+                        + languageName.toLowerCase()
+                        + ".properties");
+                properties.load(resourceAsStream);
+            } catch (Exception ex) {
+//                fallbackLoadProperties(language);
+                throw new InvalidPipelineException("Language module not found for: " + language);
+            }
+        }
+    }
+
+    private void fallbackLoadProperties(String language) {
+        if (language.equalsIgnoreCase("en")) {
+            try {
+                properties.load(getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP"
                         + ".properties"));
             } catch (IOException ex) {
-                throw new RuntimeException("Language not found: " + language, ex);
+                throw new InvalidPipelineException("Language not found: " + language);
             }
+        } else {
+            throw new InvalidPipelineException("Language not found: " + language);
         }
     }
     
@@ -84,7 +111,6 @@ public class PipelineBuilder {
     public PipelineBuilder extractSentiment() {
         checkForExistingAnnotators();
         annotators.append("parse, sentiment");
-        //properties.setProperty("parse.model", "edu/stanford/nlp/models/srparser/englishSR.ser.gz");
         return this;
     }
 
@@ -99,13 +125,6 @@ public class PipelineBuilder {
         annotators.append("parse, coref");
         properties.setProperty("coref.maxMentionDistance", "15");
         properties.setProperty("coref.algorithm", "statistical");
-        return this;
-    }
-
-    public PipelineBuilder openIE() {
-        checkForExistingAnnotators();
-        annotators.append("ner, depparse, natlog, openie");
-
         return this;
     }
 
@@ -151,7 +170,14 @@ public class PipelineBuilder {
     }
 
     public PipelineBuilder withCustomModels(String modelPaths) {
-        properties.setProperty("ner.model", modelPaths);
+        String currentModels = properties.getProperty("ner.model", "");
+        if (currentModels.equalsIgnoreCase("") && language.equalsIgnoreCase("en")) {
+            currentModels = DEFAULT_ENGLISH_NER_MODEL;
+        }
+        String sep = currentModels.trim().equalsIgnoreCase("") ? "" : ",";
+        String newModels = modelPaths + sep + currentModels;
+        LOG.info("Setting NER MODELS property to " + newModels);
+        properties.setProperty("ner.model", newModels);
         return this;
     }
 
@@ -185,5 +211,9 @@ public class PipelineBuilder {
         });
 
         return list;
+    }
+
+    public String getDefaultNERModel() {
+        return properties.getProperty("ner.model", "");
     }
 }

@@ -20,7 +20,7 @@ public class PipelineLifecycleTest extends StanfordNLPIntegrationTest {
         List<String> stopwords = Arrays.asList("have,use,can,should,from,i,when,we,you,can,what".split(","));
         clearDb();
         // When I create a pipeline with no stopwords defined
-        String addFirstQuery = "CALL ga.nlp.processor.addPipeline({\n" +
+        String addFirstQuery = "CALL ga.nlp.processor.addPipeline({language:'en', \n" +
                 "name:\"tickets\",  \n" +
                 "textProcessor:\""+ STANFORD_PROCESSOR + "\",\n" +
                 "excludedNER:['CAUSE_OF_DEATH'],\n" +
@@ -40,7 +40,7 @@ public class PipelineLifecycleTest extends StanfordNLPIntegrationTest {
 
         // And I re-create a pipeline with the same name but with custom stopwords
 
-        String query = "CALL ga.nlp.processor.addPipeline({\n" +
+        String query = "CALL ga.nlp.processor.addPipeline({language:'en', \n" +
                 "name:\"tickets\",  \n" +
                 "textProcessor:\""+ STANFORD_PROCESSOR + "\",\n" +
                 "excludedNER:['CAUSE_OF_DEATH'],\n" +

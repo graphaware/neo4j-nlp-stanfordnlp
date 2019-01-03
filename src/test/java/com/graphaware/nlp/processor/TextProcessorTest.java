@@ -41,7 +41,7 @@ public class TextProcessorTest {
         Map<String, Object> processingSteps = new HashMap<>();
         processingSteps.put(AbstractTextProcessor.STEP_TOKENIZE, true);
         processingSteps.put(AbstractTextProcessor.STEP_NER, true);
-        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
+        PipelineSpecification pipelineSpecification = new PipelineSpecification("default", "en", StanfordTextProcessor.class.getName(), processingSteps, null, 1L, Collections.emptyList(), Collections.emptyList());
         PIPELINE_DEFAULT = pipelineSpecification;
         textProcessor.createPipeline(PIPELINE_DEFAULT);
     }
@@ -58,7 +58,7 @@ public class TextProcessorTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", "en", PIPELINE_DEFAULT);
+                + "the outcome of the election was exactly as we predicted.", PIPELINE_DEFAULT);
 
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(4);
@@ -74,16 +74,16 @@ public class TextProcessorTest {
     @Test
     public void testLemmaLowerCasing() {
         String testText = "Collibra’s Data Governance Innovation: Enabling Data as a Strategic Asset";
-        AnnotatedText annotatedText = textProcessor.annotateText(testText, "en", PIPELINE_DEFAULT);
+        AnnotatedText annotatedText = textProcessor.annotateText(testText, PIPELINE_DEFAULT);
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
 
         test.assertSentencesCount(1);
         assertEquals("governance", test.getTagAtPosition(0, 16).getLemma());
 
-        PipelineSpecification pipelineSpecification = new PipelineSpecification("tokenizeWithTrueCase", StanfordTextProcessor.class.getName());
+        PipelineSpecification pipelineSpecification = new PipelineSpecification("tokenizeWithTrueCase", "en", StanfordTextProcessor.class.getName());
         pipelineSpecification.addProcessingStep("truecase");
         textProcessor.createPipeline(pipelineSpecification);
-        annotatedText = textProcessor.annotateText(testText, "en", pipelineSpecification);
+        annotatedText = textProcessor.annotateText(testText, pipelineSpecification);
 
         test = new TestAnnotatedText(annotatedText);
         test.assertSentencesCount(1);
@@ -95,7 +95,7 @@ public class TextProcessorTest {
     @Test
     public void testLemmaSplittingByPunctuation() {
         String testText = "Ser Emmon Cuy, Ser Robar Royce, Ser Parmen Crane, they'd sworn as well.";
-        AnnotatedText annotateText = textProcessor.annotateText(testText, "en", PIPELINE_DEFAULT);
+        AnnotatedText annotateText = textProcessor.annotateText(testText, PIPELINE_DEFAULT);
 
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(6, annotateText.getSentences().get(0).getTags().size());
@@ -103,7 +103,7 @@ public class TextProcessorTest {
 
     @Test
     public void testAnnotatedTag() {
-        Tag annotateTag = textProcessor.annotateTag("winners", "en", PIPELINE_DEFAULT);
+        Tag annotateTag = textProcessor.annotateTag("winners", PIPELINE_DEFAULT);
         assertEquals(annotateTag.getLemma(), "winner");
     }
 
@@ -161,7 +161,7 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedTextWithPosition() {
-        PipelineSpecification specification = new PipelineSpecification("positionTest", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("positionTest", "en", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("truecase");
         specification.addProcessingStep("sentiment");
         specification.addProcessingStep("coref");
@@ -177,7 +177,7 @@ public class TextProcessorTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", "en", specification);
+                + "the outcome of the election was exactly as we predicted.", specification);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);
@@ -205,7 +205,7 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedShortText() {
-        AnnotatedText annotatedText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", "en", PIPELINE_DEFAULT);
+        AnnotatedText annotatedText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", PIPELINE_DEFAULT);
 
         assertEquals(1, annotatedText.getSentences().size());
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
@@ -215,18 +215,18 @@ public class TextProcessorTest {
     
     @Test
     public void testAnnotatedShortText2() {
-        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", "en", PIPELINE_DEFAULT);
+        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", PIPELINE_DEFAULT);
         assertEquals(1, annotateText.getSentences().size());
     }
 
     @Test
     public void testAnnotatedQuestionWithNoStopwords() {
-        PipelineSpecification specification = new PipelineSpecification("question-no-sw", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("question-no-sw", "en", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
         String text = "What is in front of the Notre Dame Main Building?";
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
@@ -236,7 +236,7 @@ public class TextProcessorTest {
     @Test
     public void testWithOneThousandthDollar() {
         String text = "monetary units of mill or one-thousandth of a dollar (symbol ₥)";
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", PIPELINE_DEFAULT);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, PIPELINE_DEFAULT);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
@@ -246,11 +246,11 @@ public class TextProcessorTest {
     @Test
     public void testPipelineWithCustomStopwordsDoNotAddNERDateToTheWord() {
         String text = "In addition to the dollar the coinage act officially established monetary units of mill or one-thousandth of a dollar (symbol ₥), cent or one-hundredth of a dollar (symbol ¢), dime or one-tenth of a dollar, and eagle or ten dollars, with prescribed weights and composition of gold, silver, or copper for each.";
-        PipelineSpecification specification = new PipelineSpecification("customx", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customx", "en", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
 
         TestAnnotatedText test = new TestAnnotatedText(annotatedText);
         test.assertTagWithLemma("the");
@@ -259,19 +259,19 @@ public class TextProcessorTest {
 
     @Test
     public void testTypedDependenciesAreFound() {
-        AnnotatedText annotatedText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", "en", PIPELINE_DEFAULT);
+        AnnotatedText annotatedText = textProcessor.annotateText("Donald Trump flew yesterday to New York City", PIPELINE_DEFAULT);
         // @todo add some test here
 
     }
     
     @Test
     public void testIssueWithBe() {
-        PipelineSpecification specification = new PipelineSpecification("issue-be", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("issue-be", "en", StanfordTextProcessor.class.getName());
         specification.addProcessingStep("dependency");
         specification.setStopWords("start, starts");
         textProcessor.createPipeline(specification);
         String text = "Unlike the Spanish milled dollar the U.S. dollar is based upon a decimal system of values.";
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
 
         assertEquals(1, annotatedText.getSentences().size());
         Sentence sentence = annotatedText.getSentences().get(0);
@@ -280,12 +280,12 @@ public class TextProcessorTest {
 
     @Test
     public void testAnnotateTextWithSpecification() {
-        PipelineSpecification specification = new PipelineSpecification("custom", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("custom", "en", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         specification.getProcessingSteps().put("ner", true);
         specification.getExcludedNER().add("LOCATION");
         String text = "My name is John Doe and I work in Switzerland";
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
         assertEquals(1, annotatedText.getSentences().size());
         int numberOfLocationEntities = 0;
         for (Sentence sentence : annotatedText.getSentences()) {
@@ -303,11 +303,11 @@ public class TextProcessorTest {
     @Test
     public void testAddPipelineTakesStopwordsIntoAccount() {
         String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
-        PipelineSpecification specification = new PipelineSpecification("customsw", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customsw", "en", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         String stopwords = "sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification.setStopWords("sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som");
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
         List<String> blacklist = Arrays.asList(stopwords.split(","));
         annotatedText.getTags().forEach(tag -> {
             assertFalse(blacklist.contains(tag.getLemma()));
@@ -317,21 +317,21 @@ public class TextProcessorTest {
     @Test
     public void testAddPipelineTakesStopwordsIntoAccountAfterNormalAnnotation() {
         String text = "det, vad, eller, sin, efter, i, varje, sådan, de, ditt, han, dessa, vi, med, då, den, mig, denna, ingen, under, henne, sådant, du, hade, vilken,".replaceAll(",", "");
-        PipelineSpecification specification = new PipelineSpecification("customsw2", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification = new PipelineSpecification("customsw2", "en", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         String stopwords = "sådan, själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification.setStopWords(stopwords);
-        AnnotatedText annotatedText = textProcessor.annotateText(text, "en", specification);
+        AnnotatedText annotatedText = textProcessor.annotateText(text, specification);
         List<String> blacklist = Arrays.asList(stopwords.split(","));
         annotatedText.getTags().forEach(tag -> {
             assertFalse(blacklist.contains(tag.getLemma()));
         });
 
-        PipelineSpecification specification2 = new PipelineSpecification("customsw3", StanfordTextProcessor.class.getName());
+        PipelineSpecification specification2 = new PipelineSpecification("customsw3", "en", StanfordTextProcessor.class.getName());
         specification.getProcessingSteps().put("tokenize", true);
         String stopwords2 = "eller, sådan,själv, dig, från, vilkas, dem, ett, varit, varför, att, era, som";
         specification2.setStopWords(stopwords2);
-        AnnotatedText annotatedText2 = textProcessor.annotateText(text, "en", specification2);
+        AnnotatedText annotatedText2 = textProcessor.annotateText(text, specification2);
         List<String> blacklist2 = Arrays.asList(stopwords2.split(","));
         annotatedText2.getTags().forEach(tag -> {
             assertFalse(blacklist2.contains(tag.getLemma()));
@@ -341,7 +341,7 @@ public class TextProcessorTest {
 //    @Test
 //    public void testAnnotationOnSmallText() throws Exception {
 //        String text = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("textFile6k.txt").getPath())));
-//        PipelineSpecification specification = new PipelineSpecification("perf6k", StanfordTextProcessor.class.getName());
+//        PipelineSpecification specification = new PipelineSpecification("perf6k", "en", StanfordTextProcessor.class.getName());
 //        specification.addProcessingStep("tokenize");
 //        specification.addProcessingStep("ner");
 //        specification.addProcessingStep("dependency");
