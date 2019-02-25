@@ -14,7 +14,7 @@ import java.util.*;
 public class PipelineBuilder {
 
     private static final Log LOG = LoggerFactory.getLogger(PipelineBuilder.class);
-    private static final String DEFAULT_ENGLISH_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
+    public static final String DEFAULT_ENGLISH_NER_MODEL = "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz";
 
     protected final Properties properties = new Properties();
     protected final StringBuilder annotators = new StringBuilder(); //basics annotators
@@ -171,9 +171,9 @@ public class PipelineBuilder {
 
     public PipelineBuilder withCustomModels(String modelPaths) {
         String currentModels = properties.getProperty("ner.model", "");
-        if (currentModels.equalsIgnoreCase("") && language.equalsIgnoreCase("en")) {
-            currentModels = DEFAULT_ENGLISH_NER_MODEL;
-        }
+//        if (currentModels.equalsIgnoreCase("") && language.equalsIgnoreCase("en")) {
+//            currentModels = DEFAULT_ENGLISH_NER_MODEL;
+//        }
         String sep = currentModels.trim().equalsIgnoreCase("") ? "" : ",";
         String newModels = modelPaths + sep + currentModels;
         LOG.info("Setting NER MODELS property to " + newModels);

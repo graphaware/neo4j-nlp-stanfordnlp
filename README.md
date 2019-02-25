@@ -122,4 +122,14 @@ To test the model, prepare an independent test file of the same structure as the
 Finally, to use the new model during annotation, define a custom pipeline with `customNER` processing step (you can provide multiple custom models separated by `,`, for example: `nasa-missions,nasa-chemicals`):
 ```
 CALL ga.nlp.processor.addPipeline({name: 'customNER', textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', processingSteps: {tokenize: true, ner: true, sentiment: false, dependency: true, customNER: 'nasa-missions'}})
+
 ```
+
+When using custom NER models, the pipeline doesn't load the default Stanford NER models, you will need to specify that you want them loaded
+with the plus sign :
+
+```
+{customNER: 'nasa-missions, +'}
+```
+
+The position of the `+` sign is important, it defines if the default models apply before or after your custom NER models.
