@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>nlp-stanfordnlp</artifactId>
-    <version>3.5.1.53.17-SNAPSHOT</version>
+    <version>3.5.4.53.18-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <licenses>
@@ -63,12 +63,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <stanford.nlp.version>3.9.2</stanford.nlp.version>
-        <graphaware.version>3.5.1.53</graphaware.version>
+        <graphaware.version>3.5.4.53</graphaware.version>
         <resttest.version>${graphaware.version}.19</resttest.version>
-        <neo4j.version>3.5.1</neo4j.version>
+        <neo4j.version>3.5.4</neo4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <nlp.version>3.5.1.53.17-SNAPSHOT</nlp.version>
+        <nlp.version>3.5.4.18</nlp.version>
     </properties>
 
     <dependencies>
@@ -234,11 +234,53 @@
             <scope>test</scope>
         </dependency>
 
+        <!--<dependency>-->
+            <!--<groupId>edu.stanford.nlp</groupId>-->
+            <!--<artifactId>stanford-corenlp</artifactId>-->
+            <!--<version>${stanford.nlp.version}</version>-->
+            <!--<classifier>models</classifier>-->
+            <!--<scope>test</scope>-->
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                    <!--<groupId>xml-apis</groupId>-->
+                    <!--<artifactId>xml-apis</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.apache.lucene</groupId>-->
+                    <!--<artifactId>lucene-core</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.apache.lucene</groupId>-->
+                    <!--<artifactId>lucene-queries</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.apache.lucene</groupId>-->
+                    <!--<artifactId>lucene-queryparser</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>org.apache.lucene</groupId>-->
+                    <!--<artifactId>lucene-analyzers-common</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>javax.servlet</groupId>-->
+                    <!--<artifactId>javax.servlet-api</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>javax.xml.bind</groupId>-->
+                    <!--<artifactId>jaxb-api</artifactId>-->
+                <!--</exclusion>-->
+                <!--<exclusion>-->
+                    <!--<groupId>com.sun.xml.bind</groupId>-->
+                    <!--<artifactId>jaxb-impl</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
+        <!--</dependency>-->
+
         <dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <version>${stanford.nlp.version}</version>
-            <classifier>models</classifier>
+            <classifier>models-german</classifier>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -280,7 +322,7 @@
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <version>${stanford.nlp.version}</version>
-            <classifier>models-german</classifier>
+            <classifier>models-french</classifier>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

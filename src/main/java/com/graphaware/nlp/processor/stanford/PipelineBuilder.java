@@ -33,10 +33,10 @@ public class PipelineBuilder {
         this.language = language;
         if (language != null && !language.equalsIgnoreCase("en")) {
             try {
-                String languageName = new Locale(language).getDisplayLanguage();
-                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
-                        + languageName.toLowerCase()
-                        + ".properties");
+                String languageName = new Locale(language).getDisplayLanguage().toLowerCase();
+                String propertiesFile = "StanfordCoreNLP-" + languageName.toLowerCase() + ".properties";
+                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(propertiesFile);
+                LOG.info("Using properties file " + propertiesFile);
                 properties.load(resourceAsStream);
             } catch (Exception ex) {
 //                fallbackLoadProperties(language);
