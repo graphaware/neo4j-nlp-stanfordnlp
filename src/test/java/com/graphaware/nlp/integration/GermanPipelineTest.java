@@ -23,9 +23,20 @@ public class GermanPipelineTest extends StanfordNLPIntegrationTest {
         executeInTransaction("MATCH (n:Document)\n" +
                 "CALL ga.nlp.annotate({pipeline: \"de-muz-noner\", id: id(n), text: n.text, checkLanguage: false})\n" +
                 "YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result) RETURN result", (result -> {
-                    assertTrue(result.hasNext());
+            assertTrue(result.hasNext());
         }));
 
+    }
+
+    @Test
+    public void testFrench() {
+        String q = "CALL ga.nlp.processor.addPipeline({\n" +
+                "name: \"french\",\n" +
+                "textProcessor: \"com.graphaware.nlp.processor.stanford.StanfordTextProcessor\",\n" +
+                "processingSteps: {tokenize: true, ner: true},\n" +
+                "language: \"fr\"\n" +
+                "})";
+        executeInTransaction(q, emptyConsumer());
     }
 
 }
