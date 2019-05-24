@@ -51,6 +51,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.graphaware.nlp.processor.stanford.PipelineBuilder.DEFAULT_ENGLISH_NER_MODEL;
 import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 
 @NLPTextProcessor(name = "StanfordTextProcessor")
@@ -154,7 +155,11 @@ public class StanfordTextProcessor extends AbstractTextProcessor {
         String modelIds = pipelineSpecification.getProcessingStepAsString("customNER");
         final List<String> modelPaths = new ArrayList<>();
         Arrays.asList(modelIds.split(",")).forEach(id -> {
-            modelPaths.add(getModelLocation(id));
+            if (id.trim().equals("+") && pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
+                modelPaths.add(DEFAULT_ENGLISH_NER_MODEL);
+            } else {
+                modelPaths.add(getModelLocation(id));
+            }
         });
 //
 //        if (pipelineSpecification.getLanguage().equalsIgnoreCase("en")) {
