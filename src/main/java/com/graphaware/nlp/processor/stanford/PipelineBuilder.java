@@ -33,7 +33,7 @@ public class PipelineBuilder {
         this.language = language;
         if (language != null && !language.equalsIgnoreCase("en")) {
             try {
-                String languageName = new Locale(language).getDisplayLanguage();
+                String languageName = new Locale(language).getDisplayLanguage(new Locale("en"));
                 InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("StanfordCoreNLP-"
                         + languageName.toLowerCase()
                         + ".properties");
