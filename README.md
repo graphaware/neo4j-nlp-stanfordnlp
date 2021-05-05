@@ -1,3 +1,11 @@
+GraphAware Neo4j NLP Stanford NLP - RETIRED
+==========================
+
+## GraphAware Neo4j NLP Stanford Has Been Retired
+As of May 2021, this [repository has been retired](https://graphaware.com/framework/2021/05/06/from-graphaware-framework-to-graphaware-hume.html).
+
+---
+
 GraphAware NLP Using StanfordNLP
 ==========================================
 
